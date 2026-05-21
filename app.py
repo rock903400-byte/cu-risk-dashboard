@@ -11,8 +11,8 @@ from services.cloud import init_supabase, download_file_from_storage
 from config import APP_CSS, get_config
 from data.csv_processor import process_csv_final
 from data.excel_processor import process_excel_final
-from pages.overview import render_overview_page
-from pages.war_room import render_war_room_page
+from views.overview import render_overview_page
+from views.war_room import render_war_room_page
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

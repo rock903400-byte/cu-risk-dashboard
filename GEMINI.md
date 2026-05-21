@@ -82,7 +82,7 @@ data/               資料解析引擎
 components/         Streamlit UI 組件
   charts.py          戰情室圖表（瀑布圖、YoY 偵測、趨勢、排名）
   metrics.py         戰情室 KPI 卡片
-pages/              頁面入口
+views/              頁面入口
   overview.py        經營總覽與風險診斷（含雷達監控與風險矩陣）
   war_room.py        財務戰情室（資產負債表、損益表、營運分析）
 charts/style.py     Plotly 全域圖表樣式與主題配置
