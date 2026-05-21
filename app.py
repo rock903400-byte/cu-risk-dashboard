@@ -157,7 +157,10 @@ if IS_ADMIN:
 
         if st.session_state["xl_msg"]:
             _t, _m = st.session_state["xl_msg"]
-            st.success(_m) if _t == "success" else st.error(_m)
+            if _t == "success":
+                st.success(_m)
+            else:
+                st.error(_m)
 
         if uploaded_csv:
             try:
@@ -171,7 +174,10 @@ if IS_ADMIN:
 
         if st.session_state["csv_msg"]:
             _t, _m = st.session_state["csv_msg"]
-            st.success(_m) if _t == "success" else st.error(_m)
+            if _t == "success":
+                st.success(_m)
+            else:
+                st.error(_m)
 
         if st.session_state["preloaded_data"] or st.session_state["preloaded_csv"]:
             st.markdown("<hr>", unsafe_allow_html=True)
