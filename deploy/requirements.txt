@@ -1,7 +1,0 @@
-streamlit
-pandas
-plotly
-pydantic
-supabase
-openpyxl
-pytest
