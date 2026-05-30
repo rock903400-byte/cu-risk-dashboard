@@ -88,7 +88,7 @@ def detect_yoy_anomalies(
     comp["變動金額"] = comp["當月金額_今"] - comp["當月金額_前"]
     comp["變動率 (%)"] = np.where(
         comp["當月金額_前"] == 0,
-        None,
+        np.nan,
         comp["變動金額"] / comp["當月金額_前"] * 100,
     )
 
