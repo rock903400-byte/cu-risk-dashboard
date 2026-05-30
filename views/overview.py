@@ -10,6 +10,7 @@ _DOWNLOAD_CONFIG = {
     "displayModeBar": True,
     "modeBarButtons": [["toImage"]],
     "displaylogo": False,
+    "toImageButtonOptions": {"format": "png", "scale": 3},
 }
 
 
