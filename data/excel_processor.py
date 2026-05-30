@@ -43,13 +43,8 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     df_l_raw["開支比"]  = pd.to_numeric(df_l_raw["開支比"],  errors="coerce").fillna(0)
     df_l_raw["開支比"]  = df_l_raw["開支比"].apply(lambda x: x / 100 if abs(x) > 5.0 else x)
 
-    # 提撥率防禦性讀取：相容大整數與百分比格式
+    # 提撥率：update_database.py 下載時已將 HTML 的 % 值 ÷100，直接讀入即可
     df_l_raw["提撥率"]  = pd.to_numeric(df_l_raw.get("提撥率", 0), errors="coerce").fillna(0)
-    def clean_prov(x):
-        if abs(x) > 1.0:
-            return x / 1000000 if abs(x) > 100.0 else x / 100
-        return x
-    df_l_raw["提撥率"]  = df_l_raw["提撥率"].apply(clean_prov)
 
     df_m = df_m_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
     df_l = df_l_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
