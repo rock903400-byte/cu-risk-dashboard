@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from data.utils import convert_minguo_date, safe_div
+from data.utils import convert_minguo_date, format_large_number, safe_div
 
 
 class TestConvertMinguoDate:
@@ -38,3 +38,26 @@ class TestSafeDiv:
 
     def test_zero_numerator(self):
         assert safe_div(0, 5) == 0.0
+
+
+class TestFormatLargeNumber:
+    def test_yi(self):
+        assert "億" in format_large_number(2e8)
+
+    def test_wan(self):
+        assert "萬" in format_large_number(50000)
+
+    def test_small(self):
+        result = format_large_number(999)
+        assert "億" not in result and "萬" not in result
+
+    def test_negative_yi(self):
+        result = format_large_number(-2e8)
+        assert "億" in result and "-" in result
+
+    def test_boundary_yi(self):
+        assert "億" in format_large_number(1e8)
+
+    def test_boundary_wan(self):
+        result = format_large_number(1e4)
+        assert "萬" in result and "億" not in result

@@ -6,6 +6,14 @@ from data.utils import safe_div, convert_minguo_date
 from data.classifier import classify
 
 
+def _get_value(df: pd.DataFrame, col: str, d) -> float:
+    """取得 df 中 年月 <= d 的最後一筆 col 值；無匹配時取第一筆；df 為空時回傳 0.0"""
+    if df.empty:
+        return 0.0
+    sub = df[df["年月"] <= d]
+    return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
+
+
 @st.cache_data(show_spinner="🚀 正在執行智慧分析...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     try:
@@ -63,18 +71,12 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
             continue
         name = ms["社名"].iloc[0]
 
-        def get_v(df, col, d):
-            if df.empty:
-                return 0.0
-            sub = df[df["年月"] <= d]
-            return float(sub[col].iloc[-1]) if not sub.empty else (float(df[col].iloc[0]) if not df.empty else 0.0)
-
-        M0, M1, M2, M3 = (get_v(ms, "社員數", t) for t in (T0, T1, T2, T3))
-        S0, S1, S2, S3 = (get_v(ms, "股金",   t) for t in (T0, T1, T2, T3))
-        R0, R1 = get_v(ls, "開支比",  T0), get_v(ls, "開支比",  T1)
-        O0, O1 = get_v(ls, "逾期貸款", T0), get_v(ls, "逾期貸款", T1)
-        eOvd   = get_v(ls, "逾放比",  T0)
-        eLoan  = get_v(ms, "貸放比",  T0)
+        M0, M1, M2, M3 = (_get_value(ms, "社員數", t) for t in (T0, T1, T2, T3))
+        S0, S1, S2, S3 = (_get_value(ms, "股金",   t) for t in (T0, T1, T2, T3))
+        R0, R1 = _get_value(ls, "開支比",  T0), _get_value(ls, "開支比",  T1)
+        O0, O1 = _get_value(ls, "逾期貸款", T0), _get_value(ls, "逾期貸款", T1)
+        eOvd   = _get_value(ls, "逾放比",  T0)
+        eLoan  = _get_value(ms, "貸放比",  T0)
         memG   = safe_div(M0 - M1, M1)
         shrG   = safe_div(S0 - S1, S1)
 
@@ -85,12 +87,12 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
                  eLoan=eLoan, memG=memG, shrG=shrG)
         status, reason = classify(p, thresholds)
 
-        curr_M    = get_v(ms, "社員數", max_d)
-        curr_S    = get_v(ms, "股金",   max_d)
-        curr_eLoan = get_v(ms, "貸放比",  max_d)
-        curr_eOvd  = get_v(ls, "逾放比",  max_d)
-        curr_R     = get_v(ls, "開支比",  max_d)
-        eOvd_12m   = get_v(ls, "逾放比",  T_12M)
+        curr_M    = _get_value(ms, "社員數", max_d)
+        curr_S    = _get_value(ms, "股金",   max_d)
+        curr_eLoan = _get_value(ms, "貸放比",  max_d)
+        curr_eOvd  = _get_value(ls, "逾放比",  max_d)
+        curr_R     = _get_value(ls, "開支比",  max_d)
+        eOvd_12m   = _get_value(ls, "逾放比",  T_12M)
         memG_curr  = safe_div(curr_M - M0, M0)
         shrG_curr  = safe_div(curr_S - S0, S0)
 

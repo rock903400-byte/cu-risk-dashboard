@@ -116,6 +116,19 @@ class TestDetectYoyAnomalies:
         result = detect_yoy_anomalies(curr, prev, threshold_amount=100, threshold_pct=4)
         assert len(result) == 1                                                    # lowered: 500>100, 5%>4%
 
+    def test_zero_previous_year_not_in_results(self):
+        """前年金額為 0 時，變動率為 NaN，不應出現在異常清單（迴歸：修復前會算出天文數字）"""
+        curr, prev = self._make_pair(50000, 0)
+        result = detect_yoy_anomalies(curr, prev, threshold_amount=1, threshold_pct=1)
+        assert result.empty
+
+    def test_negative_change_detected(self):
+        """大額負成長應被偵測"""
+        curr, prev = self._make_pair(1000, 100000)
+        result = detect_yoy_anomalies(curr, prev, threshold_amount=1000, threshold_pct=5)
+        assert len(result) == 1
+        assert result.iloc[0]["變動金額"] < 0
+
     def test_result_sorted_by_absolute_change(self):
         curr = pd.DataFrame([
             {"會計科目": "4101", "會科名稱": "收入A", "當月金額": 30000},
