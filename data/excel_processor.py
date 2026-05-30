@@ -67,7 +67,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
             if df.empty:
                 return 0.0
             sub = df[df["年月"] <= d]
-            return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
+            return float(sub[col].iloc[-1]) if not sub.empty else (float(df[col].iloc[0]) if not df.empty else 0.0)
 
         M0, M1, M2, M3 = (get_v(ms, "社員數", t) for t in (T0, T1, T2, T3))
         S0, S1, S2, S3 = (get_v(ms, "股金",   t) for t in (T0, T1, T2, T3))

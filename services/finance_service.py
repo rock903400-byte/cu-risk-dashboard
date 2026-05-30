@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def get_annual_snapshot(df: pd.DataFrame, year_str: str) -> pd.DataFrame:
@@ -85,7 +86,11 @@ def detect_yoy_anomalies(
         on="會計科目", how="left", suffixes=("_今", "_前"),
     ).fillna(0)
     comp["變動金額"] = comp["當月金額_今"] - comp["當月金額_前"]
-    comp["變動率 (%)"] = comp["變動金額"] / comp["當月金額_前"].replace(0, 1) * 100
+    comp["變動率 (%)"] = np.where(
+        comp["當月金額_前"] == 0,
+        None,
+        comp["變動金額"] / comp["當月金額_前"] * 100,
+    )
 
     return (
         comp[

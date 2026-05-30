@@ -102,6 +102,9 @@ if st.session_state["preloaded_data"]:
             st.session_state["is_district_office"] = False
         else:
             # 【區會模式】：登入名稱不在財報清單中，視為管理單位
+            if region_data.empty:
+                st.warning("該區目前尚無報表資料，請先上傳資料庫。")
+                st.stop()
             data = region_data.copy()
             st.session_state["is_district_office"] = True
         

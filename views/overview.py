@@ -228,6 +228,9 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         all_yms = sorted(df_all_full["年月"].unique())
         all_ym_labels = [pd.Timestamp(ym).strftime("%Y-%m") for ym in all_yms]
         
+        if not all_ym_labels:
+            st.warning("尚無可顯示的月份資料。")
+            return
         col_s, col_e = st.columns(2)
         with col_s:
             start_label = st.selectbox("📅 起始月份", all_ym_labels, index=0)
@@ -277,7 +280,7 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
                         if trace.name == avg_label:
                             trace.line.dash  = "dash"
                             trace.line.width = 3
-                    apply_chart_style(fig, title, is_pct, theme_bg=THEME, interactive=True)
+                    apply_chart_style(fig, title, is_pct, theme_bg=THEME, interactive=False)
                     fig.update_layout(height=450)
                     st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
 
