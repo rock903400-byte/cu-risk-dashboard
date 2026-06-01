@@ -1,0 +1,42 @@
+# === Python 相關 ===
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# === 資料與機密檔案 (嚴禁上傳) ===
+*.xlsx
+*.xls
+*.csv
+*.json
+.streamlit/secrets.toml
+.env
+
+# === 虛擬環境 ===
+venv/
+env/
+.venv/
+bin/
+lib/
+develop-eggs/
+dist/
+eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+
+# === 作業系統與開發工具 ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+.gemini/tmp/
+
+# === 專案特定資料庫排除 ===
+資料庫*.xlsx
