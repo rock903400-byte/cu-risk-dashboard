@@ -34,9 +34,19 @@ ACCOUNT_CODES = {
     "profit": "3319",
 }
 
+def safe_secrets():
+    """Return st.secrets as a dict-like, or empty dict if no secrets file."""
+    try:
+        st.secrets._parse()
+        return st.secrets
+    except Exception:
+        return {}
+
+
 def get_config():
+    _secrets = safe_secrets()
     raw = {
-        "BUCKET_NAME":  st.secrets.get("BUCKET_NAME", "excel-reports"),
+        "BUCKET_NAME":  _secrets.get("BUCKET_NAME", "excel-reports"),
         "APP_BASE_URL": "https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app",
         "MAX_ATTEMPTS": 5,
         "THEME_BG":     "#F0F4F8",
@@ -46,15 +56,15 @@ def get_config():
             "REGION": "區域分類表",
         },
         "THRESHOLDS": {
-            "high_risk_ovd":          st.secrets.get("thresholds", {}).get("high_risk_ovd", 0.1),
-            "liquidity_loan":         st.secrets.get("thresholds", {}).get("liquidity_loan", 0.9),
-            "idle_loan":              st.secrets.get("thresholds", {}).get("idle_loan", 0.3),
-            "stable_loan_min":        st.secrets.get("thresholds", {}).get("stable_loan_min", 0.4),
-            "stable_loan_max":        st.secrets.get("thresholds", {}).get("stable_loan_max", 0.8),
-            "ovd_safe_line":          st.secrets.get("thresholds", {}).get("ovd_safe_line", 0.02),
-            "high_risk_income_ratio": st.secrets.get("thresholds", {}).get("high_risk_income_ratio", 1.0),
-            "high_risk_loan_ratio":   st.secrets.get("thresholds", {}).get("high_risk_loan_ratio", 0.1),
-            "high_risk_ovd_ratio":    st.secrets.get("thresholds", {}).get("high_risk_ovd_ratio", 0.5),
+            "high_risk_ovd":          _secrets.get("thresholds", {}).get("high_risk_ovd", 0.1),
+            "liquidity_loan":         _secrets.get("liquidity_loan", 0.9),
+            "idle_loan":              _secrets.get("idle_loan", 0.3),
+            "stable_loan_min":        _secrets.get("stable_loan_min", 0.4),
+            "stable_loan_max":        _secrets.get("stable_loan_max", 0.8),
+            "ovd_safe_line":          _secrets.get("ovd_safe_line", 0.02),
+            "high_risk_income_ratio": _secrets.get("high_risk_income_ratio", 1.0),
+            "high_risk_loan_ratio":   _secrets.get("high_risk_loan_ratio", 0.1),
+            "high_risk_ovd_ratio":    _secrets.get("high_risk_ovd_ratio", 0.5),
         },
     }
     ThresholdsConfig(**raw["THRESHOLDS"])  # 型別與正數校驗

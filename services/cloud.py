@@ -2,14 +2,17 @@ import logging
 import streamlit as st
 from supabase import create_client, Client
 
+from config import safe_secrets
+
 logger = logging.getLogger(__name__)
 
 
 @st.cache_resource
 def init_supabase() -> Client | None:
     try:
-        if "supabase" in st.secrets:
-            return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+        _secrets = safe_secrets()
+        if "supabase" in _secrets:
+            return create_client(_secrets["supabase"]["url"], _secrets["supabase"]["key"])
     except Exception as e:
         logger.warning(f"Supabase 初始化失敗: {e}")
     return None

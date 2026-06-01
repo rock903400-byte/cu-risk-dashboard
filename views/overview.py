@@ -37,12 +37,37 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         avg_src   = region_data if region_data is not None else data
         avg_label = "區域平均" if region_data is not None else "全台平均"
 
+        # 開支比 / 逾放比 YoY（方向性著色：inverse）
+        max_d = df_l["年月"].max()
+        T_12M = max_d - pd.DateOffset(months=12)
+        prev_逾放比_avg = df_l[df_l["年月"] == T_12M]["逾放比"].mean()
+        T0_dec = df_l[df_l["年月"].dt.month == 12]["年月"].max()
+        T1_dec = T0_dec - pd.DateOffset(years=1) if pd.notna(T0_dec) else None
+        prev_開支比_avg = (
+            df_l[df_l["年月"] == T1_dec]["開支比"].mean() if T1_dec is not None else float("nan")
+        )
+        curr_開支比_avg = avg_src["開支比(年)"].mean()
+        curr_逾放比_avg = avg_src["逾放比"].mean()
+
+        def _yoy_str(curr, prev):
+            if pd.isna(prev) or prev == 0:
+                return None
+            return f"{(curr - prev) / abs(prev):.2%}"
+
         c1.metric("社員總數（人）",  f"{int(total_mem):,}",
-                  f"{safe_div(total_mem - prev_mem, prev_mem):.2%}")
+                  f"{safe_div(total_mem - prev_mem, prev_mem):.2%}",
+                  help="▲ 綠代表社員成長")
         c2.metric("股金總額",  format_large_number(total_shr),
-                  f"{safe_div(total_shr - prev_shr, prev_shr):.2%}")
-        c3.metric(f"{avg_label}開支比", f"{avg_src['開支比(年)'].mean():.2%}")
-        c4.metric(f"{avg_label}逾放比", f"{avg_src['逾放比'].mean():.2%}")
+                  f"{safe_div(total_shr - prev_shr, prev_shr):.2%}",
+                  help="▲ 綠代表股金成長")
+        c3.metric(f"{avg_label}開支比", f"{curr_開支比_avg:.2%}",
+                  _yoy_str(curr_開支比_avg, prev_開支比_avg),
+                  delta_color="inverse",
+                  help="▲ 紅代表開支比惡化（越低越好）")
+        c4.metric(f"{avg_label}逾放比", f"{curr_逾放比_avg:.2%}",
+                  _yoy_str(curr_逾放比_avg, prev_逾放比_avg),
+                  delta_color="inverse",
+                  help="▲ 紅代表逾放比惡化（越低越好）")
 
         st.markdown("### 狀態雷達監控")
 
@@ -87,6 +112,21 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         fig.update_traces(**trace_kw)
         fig.add_hline(y=T["high_risk_ovd"],  line_dash="dot", line_color="red")
         fig.add_vline(x=T["liquidity_loan"], line_dash="dot", line_color="orange")
+
+        # 四象限背景色塊（語意：高貸+高逾=雙高風險 / 高貸+低逾=流動性緊繃 / 低貸+低逾=資金閒置 / 低貸+高逾=逾期風險）
+        x_th, y_th = T["liquidity_loan"], T["high_risk_ovd"]
+        x_max = max(data["貸放比"].max() * 1.1, x_th * 1.1, 1.0)
+        y_max = max(data["逾放比"].max() * 1.1, y_th * 1.1, 0.05)
+        quadrant_kw = dict(opacity=0.08, line_width=0, layer="below", type="rect")
+        fig.add_shape(x0=x_th, x1=x_max, y0=y_th, y1=y_max,
+                      fillcolor="#EF4444", **quadrant_kw)
+        fig.add_shape(x0=x_th, x1=x_max, y0=0,    y1=y_th,
+                      fillcolor="#F59E0B", **quadrant_kw)
+        fig.add_shape(x0=0,     x1=x_th,   y0=0,    y1=y_th,
+                      fillcolor="#3B82F6", **quadrant_kw)
+        fig.add_shape(x0=0,     x1=x_th,   y0=y_th, y1=y_max,
+                      fillcolor="#94A3B8", **quadrant_kw)
+
         apply_chart_style(fig, theme_bg=THEME)
         st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
 
@@ -176,9 +216,16 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
             "開支比": "{:.2%}", "提撥率": "{:.2%}",
         }
 
-        def highlight(row):
-            style = "background-color: #FEF2F2; color: #991B1B; font-weight: bold"
-            return [style if "重點輔導" in str(row["診斷狀態"]) else "" for _ in row]
+        # 4 狀態對應 4 色（cell-level，僅標 診斷狀態 欄；一般狀態不上色）
+        HIGHLIGHT_STATUS = {
+            "🚨 重點輔導":  "background-color: #FEF2F2; color: #991B1B; font-weight: bold",
+            "⚠️ 流動性緊繃": "background-color: #FFFBEB; color: #92400E; font-weight: bold",
+            "💤 資金閒置":   "background-color: #EFF6FF; color: #1E40AF; font-weight: bold",
+            "✅ 穩健模範":   "background-color: #F0FDF4; color: #166534; font-weight: bold",
+        }
+
+        def highlight_status(val):
+            return HIGHLIGHT_STATUS.get(str(val), "")
 
         cols_order = [
             "社號", "社名", "區域", "診斷狀態", "建議留意事項",
@@ -189,7 +236,7 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         df_export = data.drop(columns=["_sM", "_sS"])
         styled = (
             df_export[cols_order]
-            .style.apply(highlight, axis=1)
+            .style.map(highlight_status, subset=["診斷狀態"])
             .format(fmt)
             .set_properties(**{"font-size": "18px", "padding": "10px"})
         )
@@ -231,9 +278,11 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         if not all_ym_labels:
             st.warning("尚無可顯示的月份資料。")
             return
+        st.caption("💡 預設顯示近 24 個月；可自行調整起訖")
+        default_start_idx = max(0, len(all_ym_labels) - 24)
         col_s, col_e = st.columns(2)
         with col_s:
-            start_label = st.selectbox("📅 起始月份", all_ym_labels, index=0)
+            start_label = st.selectbox("📅 起始月份", all_ym_labels, index=default_start_idx)
         with col_e:
             end_label = st.selectbox("📅 結束月份", all_ym_labels, index=len(all_ym_labels) - 1)
         

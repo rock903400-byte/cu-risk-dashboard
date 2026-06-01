@@ -27,6 +27,10 @@ def render_kpi_cards(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame | None):
     fmt_yoy = lambda val: f"{val:.1%}" if val is not None else None
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("💵 年度總收入（新台幣）", format_large_number(income),  fmt_yoy(yoy_inc))
-    c2.metric("💸 年度總支出（新台幣）", format_large_number(expense), fmt_yoy(yoy_exp))
-    c3.metric("📊 本期損益（新台幣）",   format_large_number(profit),  fmt_yoy(yoy_prf))
+    c1.metric("💵 年度總收入（新台幣）", format_large_number(income),  fmt_yoy(yoy_inc),
+              help="▲ 綠代表收入成長")
+    c2.metric("💸 年度總支出（新台幣）", format_large_number(expense), fmt_yoy(yoy_exp),
+              delta_color="inverse",
+              help="▲ 紅代表支出惡化（支出越低越好）")
+    c3.metric("📊 本期損益（新台幣）",   format_large_number(profit),  fmt_yoy(yoy_prf),
+              help="▲ 綠代表淨利成長")

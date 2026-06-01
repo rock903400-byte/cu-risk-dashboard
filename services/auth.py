@@ -1,9 +1,11 @@
 import streamlit as st
 
+from config import safe_secrets
+
 
 def handle_login(max_attempts: int):
     entered = st.session_state.get("pwd_input", "").strip()
-    admin_pw = str(st.secrets.get("admin_password", "666"))
+    admin_pw = str(safe_secrets().get("admin_password", "666"))
     pws = st.session_state.get("preloaded_passwords", {})
 
     if entered == admin_pw:
