@@ -37,7 +37,7 @@ ACCOUNT_CODES = {
 def get_config():
     raw = {
         "BUCKET_NAME":  st.secrets.get("BUCKET_NAME", "excel-reports"),
-        "APP_BASE_URL": "https://cu-analysis-cz3xuj9tu52zsfxchmky4y.streamlit.app",
+        "APP_BASE_URL": "https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app",
         "MAX_ATTEMPTS": 5,
         "THEME_BG":     "#F0F4F8",
         "SHEETS": {
