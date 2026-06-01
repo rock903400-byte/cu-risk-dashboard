@@ -83,7 +83,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         p = dict(M0=M0, M1=M1, M2=M2, M3=M3,
                  S0=S0, S1=S1, S2=S2, S3=S3,
                  R0=R0, R1=R1, O0=O0, O1=O1,
-                 eOvd=eOvd, sOvd=get_v(ls, "逾放比", T1),
+                 eOvd=eOvd, sOvd=_get_value(ls, "逾放比", T1),
                  eLoan=eLoan, memG=memG, shrG=shrG)
         status, reason = classify(p, thresholds)
 
