@@ -70,7 +70,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-**線上部署網址**：https://cu-analysis-cz3xuj9tu52zsfxchmky4y.streamlit.app
+**線上部署網址**：https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app
 
 資料來源：
 - **Excel**（社務及資金運用 / 放款及逾期 / 區域分類表）→ 風險診斷
