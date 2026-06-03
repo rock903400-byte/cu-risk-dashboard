@@ -136,7 +136,7 @@ class TestProcessExcelFinal:
         bytes_ = _build_excel_bytes([_make_union("001", "A社")])
         data, *_ = process_excel_final(bytes_, THRESHOLDS, SHEETS)
         assert data.iloc[0]["診斷狀態"] in {
-            "🚨 重點輔導", "⚠️ 流動性緊繃", "💤 資金閒置", "✅ 穩健模範", "📊 一般狀態",
+            "🚨 特別關懷", "⚠️ 流動性緊繃", "💤 資金閒置", "✅ 穩健模範", "📊 一般狀態",
         }
 
     def test_missing_sheet_raises_value_error(self):

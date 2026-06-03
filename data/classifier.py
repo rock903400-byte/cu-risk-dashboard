@@ -25,7 +25,7 @@ def classify(p: dict, thresholds: dict) -> tuple[str, str]:
     if c5: reasons.append("股金連三年衰退")
 
     if len(reasons) >= 2:
-        return "🚨 重點輔導", "、".join(reasons)
+        return "🚨 特別關懷", "、".join(reasons)
 
     if p["eLoan"] > T["liquidity_loan"] and p["shrG"] < 0:
         return "⚠️ 流動性緊繃", ""

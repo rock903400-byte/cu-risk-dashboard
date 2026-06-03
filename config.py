@@ -143,6 +143,14 @@ html, body, [data-testid="stAppViewContainer"] {{
     padding: 5px 12px; border-radius: 10px; margin: 4px;
     font-size: 1rem; border: 1px solid #CBD5E1; font-weight: 600;
 }}
+.card-criteria {{
+    font-size: 0.82rem; color: #475569; background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0; padding: 6px 12px; line-height: 1.5;
+}}
+.union-item {{ margin: 4px 0; }}
+.reason-text {{
+    font-size: 0.82rem; color: #92400E; padding: 1px 4px 4px 14px;
+}}
 .badge-admin  {{ background: #DCFCE7; color: #166534 !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1rem; font-weight: 700; border: 1px solid #86EFAC; margin-bottom: 1rem; }}
 .badge-viewer {{ background: #FEF3C7; color: #92400E !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1rem; font-weight: 700; border: 1px solid #FCD34D; margin-bottom: 1rem; }}
 .sidebar-label {{ font-size: 1rem; font-weight: 600; color: #94A3B8; margin-bottom: 0.5rem; display: block; }}

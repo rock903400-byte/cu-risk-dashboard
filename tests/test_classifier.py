@@ -29,7 +29,7 @@ class TestClassify:
         p = _base()
         p.update(R0=1.1, R1=1.1, eLoan=0.05)  # c1 + c2
         status, reason = classify(p, THRESHOLDS)
-        assert status == "🚨 重點輔導"
+        assert status == "🚨 特別關懷"
         assert "連兩年虧損" in reason
         assert "貸放比過低" in reason
 
@@ -37,7 +37,7 @@ class TestClassify:
         p = _base()
         p.update(R0=1.1, R1=1.1, eOvd=0.6, O0=100, O1=50)  # c1 + c3
         status, reason = classify(p, THRESHOLDS)
-        assert status == "🚨 重點輔導"
+        assert status == "🚨 特別關懷"
         assert "高逾放且惡化" in reason
 
     def test_重點輔導_c4_c5(self):
@@ -45,7 +45,7 @@ class TestClassify:
         p.update(M0=80, M1=90, M2=100, M3=110,   # c4: 連三年社員衰退
                  S0=80, S1=90, S2=100, S3=110)    # c5: 連三年股金衰退
         status, reason = classify(p, THRESHOLDS)
-        assert status == "🚨 重點輔導"
+        assert status == "🚨 特別關懷"
         assert "人數連三年衰退" in reason
         assert "股金連三年衰退" in reason
 
@@ -53,7 +53,7 @@ class TestClassify:
         p = _base()
         p.update(R0=1.1, R1=1.1)  # 只有 c1，不足兩項
         status, _ = classify(p, THRESHOLDS)
-        assert status != "🚨 重點輔導"
+        assert status != "🚨 特別關懷"
 
     def test_流動性緊繃(self):
         p = _base()
