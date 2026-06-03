@@ -28,15 +28,26 @@ def classify(p: dict, thresholds: dict) -> tuple[str, str]:
         return "🚨 特別關懷", "、".join(reasons)
 
     if p["eLoan"] > T["liquidity_loan"] and p["shrG"] < 0:
-        return "⚠️ 流動性緊繃", ""
+        return "⚠️ 流動性緊繃", "貸放比偏高且股金衰退"
     if p["eLoan"] < T["idle_loan"] and p["eOvd"] < T["ovd_safe_line"]:
-        return "💤 資金閒置", ""
+        return "💤 資金閒置", "貸放比偏低且逾放安全"
     if (p["memG"] > 0 and p["shrG"] > 0
             and T["stable_loan_min"] < p["eLoan"] < T["stable_loan_max"]
             and p["eOvd"] < T["ovd_safe_line"]):
-        return "✅ 穩健模範", ""
+        return "✅ 穩健模範", "各項指標均達標"
 
-    return "📊 一般狀態", ""
+    notes = []
+    if p["eOvd"] > T["ovd_safe_line"]:
+        notes.append(f"逾放比偏高 {p['eOvd']:.1%}")
+    if p["R0"] >= T["high_risk_income_ratio"]:
+        notes.append(f"今年虧損 開支比 {p['R0']:.1%}")
+    if p["memG"] < 0 and p["shrG"] < 0:
+        notes.append("社員、股金雙降")
+    elif p["memG"] < 0:
+        notes.append("社員成長趨緩")
+    elif p["shrG"] < 0:
+        notes.append("股金成長趨緩")
+    return "📊 一般狀態", "；".join(notes[:2]) if notes else "各指標平穩"
 
 
 def classify_code(code: str) -> str:

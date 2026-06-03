@@ -58,26 +58,38 @@ class TestClassify:
     def test_流動性緊繃(self):
         p = _base()
         p.update(eLoan=0.95, shrG=-0.1)
-        status, _ = classify(p, THRESHOLDS)
+        status, reason = classify(p, THRESHOLDS)
         assert status == "⚠️ 流動性緊繃"
+        assert reason == "貸放比偏高且股金衰退"
 
     def test_資金閒置(self):
         p = _base()
         p.update(eLoan=0.2, eOvd=0.01)
-        status, _ = classify(p, THRESHOLDS)
+        status, reason = classify(p, THRESHOLDS)
         assert status == "💤 資金閒置"
+        assert reason == "貸放比偏低且逾放安全"
 
     def test_穩健模範(self):
         p = _base()
         p.update(eLoan=0.6, eOvd=0.01, memG=0.05, shrG=0.05)
-        status, _ = classify(p, THRESHOLDS)
+        status, reason = classify(p, THRESHOLDS)
         assert status == "✅ 穩健模範"
+        assert reason == "各項指標均達標"
 
     def test_一般狀態(self):
         p = _base()
         p.update(eLoan=0.35, eOvd=0.05, memG=-0.01, shrG=-0.01)
-        status, _ = classify(p, THRESHOLDS)
+        status, reason = classify(p, THRESHOLDS)
         assert status == "📊 一般狀態"
+        assert "逾放比偏高" in reason  # eOvd=0.05 > ovd_safe_line=0.02
+        assert "社員、股金雙降" in reason  # memG<0 and shrG<0
+
+    def test_一般狀態_平穩(self):
+        p = _base()
+        p.update(eLoan=0.35, eOvd=0.01, memG=0.01, shrG=0.01)
+        status, reason = classify(p, THRESHOLDS)
+        assert status == "📊 一般狀態"
+        assert reason == "各指標平穩"
 
 
 class TestClassifyCode:
