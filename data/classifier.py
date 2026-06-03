@@ -14,15 +14,15 @@ def classify(p: dict, thresholds: dict) -> tuple[str, str]:
     c1 = p["R0"] > T["high_risk_income_ratio"] and p["R1"] > T["high_risk_income_ratio"]
     c2 = p["eLoan"] < T["high_risk_loan_ratio"]
     c3 = p["eOvd"] > T["high_risk_ovd_ratio"] and p["O0"] > p["O1"]
-    c4 = p["M0"] < p["M1"] < p["M2"] < p["M3"]
-    c5 = p["S0"] < p["S1"] < p["S2"] < p["S3"]
+    c4 = p["M0"] < p["M1"] < p["M2"]
+    c5 = p["S0"] < p["S1"] < p["S2"]
 
     reasons = []
     if c1: reasons.append("連兩年虧損")
     if c2: reasons.append("貸放比過低")
     if c3: reasons.append("高逾放且惡化")
-    if c4: reasons.append("人數連三年衰退")
-    if c5: reasons.append("股金連三年衰退")
+    if c4: reasons.append("人數連兩年衰退")
+    if c5: reasons.append("股金連兩年衰退")
 
     if len(reasons) >= 2:
         return "🚨 特別關懷", "、".join(reasons)

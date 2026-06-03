@@ -46,8 +46,8 @@ class TestClassify:
                  S0=80, S1=90, S2=100, S3=110)    # c5: 連三年股金衰退
         status, reason = classify(p, THRESHOLDS)
         assert status == "🚨 特別關懷"
-        assert "人數連三年衰退" in reason
-        assert "股金連三年衰退" in reason
+        assert "人數連兩年衰退" in reason
+        assert "股金連兩年衰退" in reason
 
     def test_邊界_一個條件不觸發重點輔導(self):
         p = _base()
