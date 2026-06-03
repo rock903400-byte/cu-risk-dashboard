@@ -242,7 +242,8 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
             "現有股金": "{:,.0f}", "社員成長率(12M)": "{:.2%}",
             "股金成長率(12M)": "{:.2%}", "貸放比": "{:.1%}", "儲蓄率": "{:.1%}",
             "逾放比(12M)": "{:.2%}", "逾放比": "{:.2%}",
-            "開支比": "{:.2%}", "提撥率": "{:.2%}",
+            "開支比": "{:.2%}",
+            "提撥率": lambda x: "無逾期" if x == 0 else f"{x:.2%}",
         }
 
         # 4 狀態對應 4 色（cell-level，僅標 診斷狀態 欄；一般狀態不上色）
@@ -274,9 +275,12 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         df_dl = df_export[cols_order].copy()
         for col, pattern in fmt.items():
             if col in df_dl.columns:
-                df_dl[col] = df_dl[col].apply(
-                    lambda x: pattern.format(x) if pd.notnull(x) else ""
-                )
+                if callable(pattern):
+                    df_dl[col] = df_dl[col].apply(pattern)
+                else:
+                    df_dl[col] = df_dl[col].apply(
+                        lambda x: pattern.format(x) if pd.notnull(x) else ""
+                    )
         st.download_button("📥 匯出 CSV",
                            df_dl.to_csv(index=False).encode("utf-8-sig"),
                            "report.csv", "text/csv")
