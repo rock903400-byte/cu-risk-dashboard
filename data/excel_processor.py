@@ -14,7 +14,10 @@ def _get_value(df: pd.DataFrame, col: str, d) -> float:
     return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
 
 
-@st.cache_data(show_spinner="🚀 正在執行智慧分析...")
+_CACHE_VER = "v2"  # Bump this whenever classifier.py logic changes
+
+
+@st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     try:
         with pd.ExcelFile(io.BytesIO(file_bytes)) as xls:
