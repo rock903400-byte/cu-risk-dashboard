@@ -89,10 +89,10 @@ def render_yoy_anomalies(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame,
         axis=1
     )
 
-    result = display_df[[ "會計科目", "會科名稱", "當月金額_前", "當月金額_今", "增減金額", "增減率"]].copy()
-    result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額", "增減金額", "增減率"]
-    result["增減金額"] = display_df["變動金額"]
-    result["增減率"] = display_df["變動率 (%)"]
+    result = display_df[["會計科目", "會科名稱", "當月金額_前", "當月金額_今"]].copy()
+    result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額"]
+    result["增減金額"] = display_df["變動金額"].values
+    result["增減率"] = display_df["變動率 (%)"].values
 
     def color_diff(val):
         if pd.isna(val):
