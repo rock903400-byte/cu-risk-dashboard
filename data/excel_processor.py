@@ -14,12 +14,12 @@ def _get_value(df: pd.DataFrame, col: str, d) -> float:
     return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
 
 
-_CACHE_VER = "v2"  # Bump this whenever classifier.py logic changes
+_CACHE_VER = "v3"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
 
 
 @st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
-    _VER = "v4"  # bump when classifier.py logic changes; this string IS in bytecode
+    _VER = "v5"  # bump when classifier.py logic changes; this string IS in bytecode
     try:
         with pd.ExcelFile(io.BytesIO(file_bytes)) as xls:
             if not all(s in xls.sheet_names for s in sheets.values()):

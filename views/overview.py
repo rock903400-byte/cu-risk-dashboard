@@ -101,7 +101,7 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         sc1, sc2, sc3, sc4 = st.columns(4)
         with sc1: render_card(
             "🚨 特別關懷", "特別關懷", "hdr-red",
-            f"以下 5 項觸發任 2 項：連兩年虧損 / 貸放比＜{T['high_risk_loan_ratio']:.0%} / 高逾放且惡化 / 人數連兩年衰退 / 股金連兩年衰退",
+            f"以下 5 項觸發任 2 項：連兩年虧損 / 貸放比＜{T['high_risk_loan_ratio']:.0%} / 高逾放且惡化 / 人數連三年衰退 / 股金連三年衰退",
             show_reasons=False,
         )
         with sc2: render_card(
