@@ -137,7 +137,7 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
             line=dict(width=1, color="DarkSlateGrey"),
         ))
         if show_labels:
-            trace_kw.update(textposition="top center", textfont=dict(size=14))
+            trace_kw.update(textposition="top center", textfont=dict(size=16))
         fig.update_traces(**trace_kw)
         fig.add_hline(y=T["high_risk_ovd"],  line_dash="dot", line_color="red")
         fig.add_vline(x=T["liquidity_loan"], line_dash="dot", line_color="orange")

@@ -45,7 +45,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 disp_a.style.format({"當月金額": "{:,.0f}"})
                 .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
                                    if x.name == len(disp_a) - 1 else "" for _ in x], axis=1)
-                .set_properties(**{"font-size": "15px"}),
+                .set_properties(**{"font-size": "16px"}),
                 use_container_width=True, hide_index=True,
             )
 
@@ -67,7 +67,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 le_disp.style.format({"當月金額": "{:,.0f}"})
                 .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
                                    if "計" in str(x["會科名稱"]) else "" for _ in x], axis=1)
-                .set_properties(**{"font-size": "15px"}),
+                .set_properties(**{"font-size": "16px"}),
                 use_container_width=True, hide_index=True,
             )
             diff = total_a - (total_l + total_e)
@@ -127,7 +127,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             st.dataframe(
                 is_disp.style
                 .apply(style_is, axis=1)
-                .set_properties(**{"font-size": "15px"}),
+                .set_properties(**{"font-size": "16px"}),
                 use_container_width=True, hide_index=True,
             )
 
@@ -201,7 +201,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
         st.dataframe(
             filtered.style
             .format({"當月金額": "{:,.0f}"})
-            .set_properties(**{"font-size": "14px"}),
+            .set_properties(**{"font-size": "16px"}),
             use_container_width=True,
         )
 
@@ -338,7 +338,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                             "開支比": "{:.1%}",
                             "損益":   lambda x: format_large_number(x),
                         })
-                        .set_properties(**{"font-size": "15px", "text-align": "center"})
+                        .set_properties(**{"font-size": "16px", "text-align": "center"})
                         .set_properties(**{"text-align": "left"}, subset=["年度"]),
                         use_container_width=True,
                         hide_index=True,

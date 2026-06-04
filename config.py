@@ -102,24 +102,31 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {{ font-size: 2.2rem !important; font-weight: 700 !important; word-break: break-all !important; overflow-wrap: anywhere !important; white-space: normal !important; line-height: 1.2 !important; text-overflow: clip !important; overflow: visible !important; }}
 [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] > div {{ font-size: 1.1rem !important; font-weight: 600 !important; word-break: break-word !important; white-space: normal !important; text-overflow: clip !important; overflow: visible !important; }}
 [data-testid="metric-container"] {{ overflow: visible !important; }}
-[data-testid="stDataFrame"] {{ font-size: 16px !important; }}
+[data-testid="stDataFrame"] {{ font-size: 18px !important; }}
 @media (max-width: 640px) {{
-    html, body, [data-testid="stAppViewContainer"] {{ font-size: 16px !important; }}
+    html, body, [data-testid="stAppViewContainer"] {{ font-size: 18px !important; }}
     [data-testid="stMainBlockContainer"] {{
-        padding-left: 0.8rem !important; padding-right: 0.8rem !important; padding-top: 3.5rem !important;
+        padding-left: 1rem !important; padding-right: 1rem !important; padding-top: 3.5rem !important;
     }}
     .stat-card {{ min-height: auto !important; }}
-    .responsive-h1 {{ font-size: 1.8rem !important; }}
-    .responsive-h2 {{ font-size: 1.5rem !important; }}
-    [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {{ font-size: 1.8rem !important; word-break: break-all !important; white-space: normal !important; text-overflow: clip !important; overflow: visible !important; }}
+    .responsive-h1 {{ font-size: 2rem !important; }}
+    .responsive-h2 {{ font-size: 1.6rem !important; }}
+    [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {{ font-size: 2rem !important; word-break: break-all !important; white-space: normal !important; text-overflow: clip !important; overflow: visible !important; }}
+    .stButton > button {{ min-height: 56px !important; font-size: 18px !important; }}
+    [data-baseweb="select"] {{ min-height: 56px !important; font-size: 18px !important; }}
+    .stTabs [data-baseweb="tab"] {{ font-size: 16px !important; padding: 12px 16px !important; }}
+    .card-criteria {{ font-size: 1rem !important; padding: 8px 12px !important; }}
+    .reason-text {{ font-size: 1rem !important; }}
+    .name-tag {{ font-size: 1.1rem !important; padding: 6px 14px !important; }}
+    [data-testid="stDataFrame"] {{ font-size: 18px !important; }}
 }}
-[data-testid="stSidebar"] {{ background-color: #1E293B !important; }}
+[data-testid="stSidebar"] {{ background-color: #1E293B !important; min-width: 280px !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
 [data-testid="stSidebar"] hr {{ border-color: #334155 !important; margin: 1.5rem 0 !important; }}
 [data-testid="stSidebar"] .stButton > button {{
     background: #334155; color: #E2E8F0 !important; border: 1px solid #475569;
     border-radius: 10px; padding: 0.5rem 1rem; font-weight: 600;
-    width: 100%; min-height: 48px !important;
+    width: 100%; min-height: 52px !important;
 }}
 [data-testid="stSidebar"] .stButton > button:hover {{
     background: #475569; border-color: #64748B; transform: translateY(-1px);
@@ -131,9 +138,9 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 .stat-card {{
     background: white; border-radius: 14px; border: 1px solid #E2E8F0;
-    margin-bottom: 1rem; min-height: 180px; display: flex; flex-direction: column; overflow: hidden;
+    margin-bottom: 1rem; min-height: 200px; display: flex; flex-direction: column; overflow: hidden;
 }}
-.card-header {{ padding: 12px; color: #FFF !important; font-weight: 700; text-align: center; font-size: 1.1rem; }}
+.card-header {{ padding: 12px; color: #FFF !important; font-weight: 700; text-align: center; font-size: 1.2rem; }}
 .hdr-red    {{ background: linear-gradient(135deg, #EF4444, #991B1B); }}
 .hdr-orange {{ background: linear-gradient(135deg, #F59E0B, #92400E); }}
 .hdr-blue   {{ background: linear-gradient(135deg, #3B82F6, #1E40AF); }}
@@ -141,20 +148,20 @@ html, body, [data-testid="stAppViewContainer"] {{
 .name-tag {{
     display: inline-block; background: #F1F5F9; color: #1A202C !important;
     padding: 5px 12px; border-radius: 10px; margin: 4px;
-    font-size: 1rem; border: 1px solid #CBD5E1; font-weight: 600;
+    font-size: 1.1rem; border: 1px solid #CBD5E1; font-weight: 600;
 }}
 .card-criteria {{
-    font-size: 0.82rem; color: #475569; background: #F8FAFC;
+    font-size: 0.95rem; color: #475569; background: #F8FAFC;
     border-bottom: 1px solid #E2E8F0; padding: 6px 12px; line-height: 1.5;
 }}
 .union-item {{ margin: 4px 0; }}
 .reason-text {{
-    font-size: 0.82rem; color: #92400E; padding: 1px 4px 4px 14px;
+    font-size: 0.95rem; color: #92400E; padding: 1px 4px 4px 14px;
 }}
-.badge-admin  {{ background: #DCFCE7; color: #166534 !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1rem; font-weight: 700; border: 1px solid #86EFAC; margin-bottom: 1rem; }}
-.badge-viewer {{ background: #FEF3C7; color: #92400E !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1rem; font-weight: 700; border: 1px solid #FCD34D; margin-bottom: 1rem; }}
-.sidebar-label {{ font-size: 1rem; font-weight: 600; color: #94A3B8; margin-bottom: 0.5rem; display: block; }}
-.alert-box   {{ padding: 15px; border-radius: 10px; margin-bottom: 1rem; font-size: 1rem; font-weight: 600; border: 1px solid transparent; }}
+.badge-admin  {{ background: #DCFCE7; color: #166534 !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; border: 1px solid #86EFAC; margin-bottom: 1rem; }}
+.badge-viewer {{ background: #FEF3C7; color: #92400E !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; border: 1px solid #FCD34D; margin-bottom: 1rem; }}
+.sidebar-label {{ font-size: 1.1rem; font-weight: 600; color: #94A3B8; margin-bottom: 0.5rem; display: block; }}
+.alert-box   {{ padding: 15px; border-radius: 10px; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600; border: 1px solid transparent; }}
 .alert-error   {{ background-color: #FEF2F2; color: #991B1B; border-color: #FEE2E2; }}
 .alert-warning {{ background-color: #FFFBEB; color: #92400E; border-color: #FEF3C7; }}
 </style>

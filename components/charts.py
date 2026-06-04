@@ -57,7 +57,7 @@ def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str
     fig.update_layout(
         plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
         height=500, margin=dict(t=50, b=50, l=20, r=20),
-        dragmode=False, font=dict(size=15),
+        dragmode=False, font=dict(size=16),
         xaxis=dict(fixedrange=True),
         yaxis=dict(fixedrange=True),
     )
@@ -157,12 +157,12 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
                     color_discrete_map={year_label: cat_color, compare_label: "#94A3B8"},
                     labels={"顯示金額": "金額", "會科名稱": "科目"},
                 )
-                fig.update_traces(textposition="outside", textfont=dict(size=12))
+                fig.update_traces(textposition="outside", textfont=dict(size=14))
                 fig.update_layout(
                     plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
                     margin=dict(t=10, b=30, l=10, r=30),
                     dragmode=False, showlegend=True, height=430,
-                    font=dict(size=14),
+                    font=dict(size=16),
                     xaxis=dict(range=[0, max_val * 1.5], fixedrange=True),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 )
@@ -177,13 +177,13 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
                 fig.update_traces(
                     text=[format_large_number(v) for v in cat_df["顯示金額"]],
                     textposition="outside",
-                    textfont=dict(size=13),
+                    textfont=dict(size=15),
                 )
                 fig.update_layout(
                     plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
                     margin=dict(t=30, b=30, l=10, r=30),
                     dragmode=False, showlegend=False, height=380,
-                    font=dict(size=14),
+                    font=dict(size=16),
                     xaxis=dict(range=[0, max_val * 1.35], fixedrange=True),
                 )
             fig.update_yaxes(fixedrange=True, categoryorder="array", categoryarray=y_order)
@@ -214,7 +214,7 @@ def render_yearly_trend(analysis_df: pd.DataFrame, theme_bg: str):
         height=400, barmode="group", hovermode="x unified",
         plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-        dragmode=False, font=dict(size=14),
+        dragmode=False, font=dict(size=16),
         xaxis=dict(fixedrange=True),
         yaxis=dict(fixedrange=True),
         yaxis2=dict(fixedrange=True),
