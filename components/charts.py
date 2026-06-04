@@ -133,6 +133,9 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
 
             cat_color = CATEGORY_COLORS.get(cat_name, "#94A3B8")
 
+            # Plotly horizontal bar: categories render bottom-to-top, so reverse to put rank-1 at top
+            y_order = list(reversed(cat_df["會科名稱"].tolist()))
+
             if comp_rank is not None:
                 top_accounts = cat_df["會科名稱"].tolist()
                 comp_cat = (
@@ -163,8 +166,6 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
                     xaxis=dict(range=[0, max_val * 1.5], fixedrange=True),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 )
-                fig.update_yaxes(fixedrange=True, categoryorder="total ascending")
-                st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
             else:
                 max_val = cat_df["顯示金額"].max()
                 fig = px.bar(
@@ -185,8 +186,8 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
                     font=dict(size=14),
                     xaxis=dict(range=[0, max_val * 1.35], fixedrange=True),
                 )
-                fig.update_yaxes(fixedrange=True, categoryorder="total ascending")
-                st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+            fig.update_yaxes(fixedrange=True, categoryorder="array", categoryarray=y_order)
+            st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
 
 
 def render_yearly_trend(analysis_df: pd.DataFrame, theme_bg: str):
