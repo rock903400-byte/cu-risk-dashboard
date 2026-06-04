@@ -5,8 +5,8 @@ from components.charts import render_ranking_tabs, render_waterfall, render_year
 from components.metrics import render_kpi_cards
 from data.classifier import classify_code
 from data.utils import format_large_number
-from services.finance_service import get_annual_snapshot, detect_yoy_anomalies
-from services.diagnosis_service import calc_ratios, rate_ratio, get_yoy_advice, calc_trend
+from services.finance_service import get_annual_snapshot
+from services.diagnosis_service import calc_ratios, rate_ratio, calc_trend
 
 
 def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
@@ -160,39 +160,125 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             exp_total  = expenses["當月金額"].sum()
             net_profit = rev_total - exp_total
 
+            show_compare = st.checkbox("📊 對比去年", value=False, key="is_compare")
+            prev_is_annual = pd.DataFrame()
+            if show_compare:
+                curr_idx = all_years.index(selected_year)
+                prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+                if prev_year:
+                    prev_is_annual = get_annual_snapshot(is_df, prev_year)
+                    prev_is_annual = prev_is_annual[prev_is_annual["會計科目"].astype(str).str.match(r"^[45]")].copy()
+                    prev_is_annual["類別"] = prev_is_annual["會計科目"].apply(classify_code)
+                else:
+                    st.info("無前期年度可對比。")
+
             def _fmt(v):
                 return "" if v is None or (isinstance(v, float) and pd.isna(v)) else f"{v:,.0f}"
 
-            is_disp = pd.concat([
-                pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "年度累計金額": ""}]),
-                incomes.rename(columns={"當月金額": "年度累計金額"}).assign(
-                    年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "年度累計金額": _fmt(rev_total)}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "年度累計金額": ""}]),
-                expenses.rename(columns={"當月金額": "年度累計金額"}).assign(
-                    年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "年度累計金額": _fmt(exp_total)}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "年度累計金額": _fmt(net_profit)}]),
-            ]).reset_index(drop=True)
+            if show_compare and not prev_is_annual.empty:
+                prev_incomes = prev_is_annual[prev_is_annual["類別"] == "收入"].sort_values("會計科目")[
+                    ["會計科目", "當月金額"]].rename(columns={"當月金額": "去年金額"})
+                prev_expenses = prev_is_annual[prev_is_annual["類別"] == "支出"].sort_values("會計科目")[
+                    ["會計科目", "當月金額"]].rename(columns={"當月金額": "去年金額"})
 
-            def style_is(row):
-                if "合計" in str(row["會科名稱"]):
-                    return ["font-weight: bold; background-color: #f0f2f6"] * len(row)
-                if "淨利" in str(row["會科名稱"]):
-                    bg = "#DCFCE7" if net_profit >= 0 else "#FEE2E2"
-                    return [f"font-weight: bold; background-color: {bg}; border-top: 2px solid black"] * len(row)
-                if "--" in str(row["會科名稱"]):
-                    return ["color: #64748B; font-style: italic"] * len(row)
-                return [""] * len(row)
+                inc_merged = pd.merge(incomes, prev_incomes, on="會計科目", how="outer").fillna(0)
+                inc_merged["增減"] = inc_merged["當月金額"] - inc_merged["去年金額"]
+                inc_merged["增減率"] = inc_merged.apply(
+                    lambda r: r["增減"] / r["去年金額"] if r["去年金額"] != 0 else None, axis=1)
 
-            st.dataframe(
-                is_disp.style
-                .apply(style_is, axis=1)
-                .set_properties(**{"font-size": "16px"}),
-                use_container_width=True, hide_index=True,
-            )
+                exp_merged = pd.merge(expenses, prev_expenses, on="會計科目", how="outer").fillna(0)
+                exp_merged["增減"] = exp_merged["當月金額"] - exp_merged["去年金額"]
+                exp_merged["增減率"] = exp_merged.apply(
+                    lambda r: r["增減"] / r["去年金額"] if r["去年金額"] != 0 else None, axis=1)
+
+                prev_rev_total = prev_incomes["去年金額"].sum()
+                prev_exp_total = prev_expenses["去年金額"].sum()
+                prev_net = prev_rev_total - prev_exp_total
+                rev_delta = rev_total - prev_rev_total
+                exp_delta = exp_total - prev_exp_total
+                net_delta = net_profit - prev_net
+
+                is_disp = pd.concat([
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --", "今年金額": "", "去年金額": "", "增減": "", "增減率": ""}]),
+                    inc_merged.assign(今年金額=inc_merged["當月金額"].map(_fmt),
+                                      去年金額=inc_merged["去年金額"].map(_fmt),
+                                      增減=inc_merged["增減"].map(_fmt),
+                                      增減率=inc_merged["增減率"].map(lambda x: f"{x:+.1%}" if x is not None else "")),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",
+                                   "今年金額": _fmt(rev_total), "去年金額": _fmt(prev_rev_total),
+                                   "增減": _fmt(rev_delta), "增減率": f"{rev_delta/prev_rev_total:+.1%}" if prev_rev_total else ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "", "今年金額": "", "去年金額": "", "增減": "", "增減率": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --", "今年金額": "", "去年金額": "", "增減": "", "增減率": ""}]),
+                    exp_merged.assign(今年金額=exp_merged["當月金額"].map(_fmt),
+                                      去年金額=exp_merged["去年金額"].map(_fmt),
+                                      增減=exp_merged["增減"].map(_fmt),
+                                      增減率=exp_merged["增減率"].map(lambda x: f"{x:+.1%}" if x is not None else "")),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",
+                                   "今年金額": _fmt(exp_total), "去年金額": _fmt(prev_exp_total),
+                                   "增減": _fmt(exp_delta), "增減率": f"{exp_delta/prev_exp_total:+.1%}" if prev_exp_total else ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "", "今年金額": "", "去年金額": "", "增減": "", "增減率": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",
+                                   "今年金額": _fmt(net_profit), "去年金額": _fmt(prev_net),
+                                   "增減": _fmt(net_delta), "增減率": ""}]),
+                ]).reset_index(drop=True)
+
+                def style_is_compare(row):
+                    styles = [""] * len(row)
+                    if "合計" in str(row["會科名稱"]):
+                        styles = ["font-weight: bold; background-color: #f0f2f6"] * len(row)
+                    elif "淨利" in str(row["會科名稱"]):
+                        bg = "#DCFCE7" if net_profit >= 0 else "#FEE2E2"
+                        styles = [f"font-weight: bold; background-color: {bg}; border-top: 2px solid black"] * len(row)
+                    elif "--" in str(row["會科名稱"]):
+                        styles = ["color: #64748B; font-style: italic"] * len(row)
+                    if len(row) > 4 and row["增減"] not in ("", None):
+                        try:
+                            delta = float(str(row["增減"]).replace(",", ""))
+                            if delta > 0:
+                                styles[4] = "color: #10B981; font-weight: bold"
+                            elif delta < 0:
+                                styles[4] = "color: #EF4444; font-weight: bold"
+                        except (ValueError, TypeError):
+                            pass
+                    return styles
+
+                st.dataframe(
+                    is_disp[["會計科目", "會科名稱", "今年金額", "去年金額", "增減", "增減率"]].style
+                    .apply(style_is_compare, axis=1)
+                    .set_properties(**{"font-size": "16px"}),
+                    use_container_width=True, hide_index=True,
+                )
+            else:
+                is_disp = pd.concat([
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "年度累計金額": ""}]),
+                    incomes.rename(columns={"當月金額": "年度累計金額"}).assign(
+                        年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "年度累計金額": _fmt(rev_total)}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "年度累計金額": ""}]),
+                    expenses.rename(columns={"當月金額": "年度累計金額"}).assign(
+                        年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "年度累計金額": _fmt(exp_total)}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "年度累計金額": _fmt(net_profit)}]),
+                ]).reset_index(drop=True)
+
+                def style_is(row):
+                    if "合計" in str(row["會科名稱"]):
+                        return ["font-weight: bold; background-color: #f0f2f6"] * len(row)
+                    if "淨利" in str(row["會科名稱"]):
+                        bg = "#DCFCE7" if net_profit >= 0 else "#FEE2E2"
+                        return [f"font-weight: bold; background-color: {bg}; border-top: 2px solid black"] * len(row)
+                    if "--" in str(row["會科名稱"]):
+                        return ["color: #64748B; font-style: italic"] * len(row)
+                    return [""] * len(row)
+
+                st.dataframe(
+                    is_disp.style
+                    .apply(style_is, axis=1)
+                    .set_properties(**{"font-size": "16px"}),
+                    use_container_width=True, hide_index=True,
+                )
 
     # ── 年度概覽 ──────────────────────────────────────────
     with tab_overview:
@@ -357,19 +443,29 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
                 st.divider()
 
+                # ── 放款收益 ──────────────────────────────
+                st.markdown("#### 🏦 放款收益")
+                lir = ratios["loan_interest_rate"]
+                prev_lir = prev_ratios["loan_interest_rate"] if prev_ratios else None
+                delta_lir = f"{(lir - prev_lir):+.2%}" if prev_lir is not None else None
+                st.metric("放款利息收入率（利息收入／放款總額）", f"{lir:.2%}", delta=delta_lir)
+                lv = rate_ratio(lir, "loan_interest_rate")
+                if lv == "green":
+                    st.success("✅ 放款收益率良好，資金運用效率佳。")
+                elif lv == "yellow":
+                    st.warning("⚠️ 放款收益率偏低（1–3%），可評估是否調整放款結構或利率定價。")
+                else:
+                    st.error("🚨 放款收益率過低（< 1%），資金運用效率不佳，建議檢視放款策略。")
+
+                st.divider()
+
                 # ── 科目異常建議 ──────────────────────────
                 st.markdown("#### 🔍 科目異常建議")
                 if prev_agg is None or prev_agg.empty:
                     st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
                 else:
-                    anomalies = detect_yoy_anomalies(annual_agg, prev_agg)
-                    yoy_advice = get_yoy_advice(anomalies)
-                    if not yoy_advice:
-                        st.success("✅ 各科目年度變動平穩，未發現顯著異常。")
-                    else:
-                        for item in yoy_advice:
-                            fn = st.error if item["level"] == "red" else st.warning
-                            fn(f"**{item['title']}**\n\n→ {item['body']}")
+                    with st.spinner("分析科目變動..."):
+                        render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
 
                 st.divider()
 

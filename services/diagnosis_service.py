@@ -7,6 +7,7 @@ THRESHOLDS = {
     "debt_ratio":    {"green": 0.80, "red": 0.90},
     "equity_ratio":  {"green": 0.20, "red": 0.10},
     "expense_ratio": {"green": 0.95, "red": 1.05},
+    "loan_interest_rate": {"green": 0.03, "red": 0.01},
 }
 
 _YOY_RULES = [
@@ -26,6 +27,8 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
     total_equity  = annual_agg[codes.str.startswith("3")]["當月金額"].sum()
     total_income  = annual_agg[codes.str.startswith("4")]["當月金額"].sum()
     total_expense = annual_agg[codes.str.startswith("5")]["當月金額"].sum()
+    total_loans   = annual_agg[codes.str.startswith("12")]["當月金額"].sum()
+    interest_income = annual_agg[codes.str.startswith("41")]["當月金額"].sum()
     return {
         "debt_ratio":    safe_div(total_liabs, total_assets),
         "equity_ratio":  safe_div(total_equity, total_assets),
@@ -34,6 +37,7 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
         "total_assets":  total_assets,
         "total_income":  total_income,
         "total_expense": total_expense,
+        "loan_interest_rate": safe_div(interest_income, total_loans),
     }
 
 
@@ -43,6 +47,10 @@ def rate_ratio(value: float, key: str) -> str:
         if value <= t["red"]:  return "red"
         if value < t["green"]: return "yellow"
         return "green"
+    elif key == "loan_interest_rate":
+        if value >= t["green"]: return "green"
+        if value >= t["red"]:   return "yellow"
+        return "red"
     else:
         if value >= t["red"]:   return "red"
         if value >= t["green"]: return "yellow"

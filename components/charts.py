@@ -66,37 +66,68 @@ def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str
 
 def render_yoy_anomalies(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame,
                           selected_year: str, prev_year: str):
-    """YoY 異常偵測：前 3 大用 st.error 置頂，其餘放 expander"""
+    """YoY 異常偵測：改善版顯示，移除紅色警示，增加摘要卡片"""
     anomalies = detect_yoy_anomalies(annual_agg, prev_agg)
 
     if anomalies.empty:
-        st.success("本年度各科目變動平穩，未發現顯著異常。")
+        st.success("✅ 本年度各科目變動平穩，未發現顯著異常。")
         return
 
-    st.write(f"與 **前一年度 ({prev_year})** 相比，最劇烈前 10 大科目：")
+    total_increase = anomalies[anomalies["變動金額"] > 0]["變動金額"].sum()
+    total_decrease = anomalies[anomalies["變動金額"] < 0]["變動金額"].abs().sum()
+    net_change = total_increase - total_decrease
 
-    for _, r in anomalies.head(3).iterrows():
-        direction = "暴增" if r["變動金額"] > 0 else "驟減"
-        st.error(
-            f"🚨 **{r['會科名稱']}** 較去年{direction} "
-            f"{format_large_number(abs(r['變動金額']))}（{r['變動率 (%)']:+.1f}%）"
-        )
+    st.info(f"📊 與 **{prev_year}年** 相比，共 **{len(anomalies)}** 個科目有顯著變動\n\n"
+            f"- 增加合計：**{format_large_number(total_increase)}**\n"
+            f"- 減少合計：**{format_large_number(total_decrease)}**\n"
+            f"- 淨變動：**{format_large_number(abs(net_change))}** {'↑' if net_change > 0 else '↓'}")
 
-    st.markdown("**完整異常科目（前 10 名）**")
+    display_df = anomalies.head(10).copy()
+    display_df["方向"] = display_df["變動金額"].apply(lambda x: "↑" if x > 0 else "↓")
+    display_df["變動說明"] = display_df.apply(
+        lambda r: f"{r['方向']} {format_large_number(abs(r['變動金額']))}（{r['變動率 (%)']:+.1f}%）",
+        axis=1
+    )
+
+    result = display_df[[ "會計科目", "會科名稱", "當月金額_前", "當月金額_今", "增減金額", "增減率"]].copy()
+    result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額", "增減金額", "增減率"]
+    result["增減金額"] = display_df["變動金額"]
+    result["增減率"] = display_df["變動率 (%)"]
 
     def color_diff(val):
+        if pd.isna(val):
+            return ""
         return f"color: {'#EF4444' if val > 0 else '#10B981'}; font-weight: bold"
 
+    st.markdown(f"**變動前 10 大科目**")
     st.dataframe(
-        anomalies.style
+        result.style
         .format({
-            "當月金額_前": "{:,.0f}", "當月金額_今": "{:,.0f}",
-            "變動金額": "{:+,.0f}", "變動率 (%)": "{:+.2f}%",
+            "去年金額": "{:,.0f}", "今年金額": "{:,.0f}",
+            "增減金額": "{:+,.0f}", "增減率": "{:+.1f}%",
         })
-        .map(color_diff, subset=["變動金額", "變動率 (%)"])
-        .set_properties(**{"font-size": "18px", "padding": "10px"}),
+        .map(color_diff, subset=["增減金額", "增減率"])
+        .set_properties(**{"font-size": "16px", "padding": "8px"}),
         use_container_width=True, hide_index=True,
     )
+
+    if len(anomalies) > 10:
+        with st.expander(f"查看全部 {len(anomalies)} 個變動科目"):
+            full_display = anomalies.copy()
+            full_display["增減金額"] = full_display["變動金額"]
+            full_display["增減率"] = full_display["變動率 (%)"]
+            full_result = full_display[["會計科目", "會科名稱", "當月金額_前", "當月金額_今", "增減金額", "增減率"]].copy()
+            full_result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額", "增減金額", "增減率"]
+            st.dataframe(
+                full_result.style
+                .format({
+                    "去年金額": "{:,.0f}", "今年金額": "{:,.0f}",
+                    "增減金額": "{:+,.0f}", "增減率": "{:+.1f}%",
+                })
+                .map(color_diff, subset=["增減金額", "增減率"])
+                .set_properties(**{"font-size": "16px", "padding": "8px"}),
+                use_container_width=True, hide_index=True,
+            )
 
 
 def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
