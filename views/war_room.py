@@ -5,15 +5,16 @@ from components.charts import render_ranking_tabs, render_waterfall, render_year
 from components.metrics import render_kpi_cards
 from data.classifier import classify_code
 from data.utils import safe_div, format_large_number
-from services.finance_service import get_annual_snapshot
+from services.finance_service import get_annual_snapshot, detect_yoy_anomalies
+from services.diagnosis_service import calc_ratios, rate_ratio, get_yoy_advice, calc_trend
 
 
 def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
                          is_admin: bool, config: dict):
     THEME = config["THEME_BG"]
 
-    tab_bs, tab_is, tab_analysis, tab_raw = st.tabs(
-        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 營運分析", "📑 原始資料"]
+    tab_bs, tab_is, tab_analysis, tab_raw, tab_diag = st.tabs(
+        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 營運分析", "📑 原始資料", "🏥 財務診斷"]
     )
 
     with st.sidebar:
@@ -213,3 +214,150 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
             .set_properties(**{"font-size": "16px"}),
             use_container_width=True,
         )
+
+    # ── 財務診斷 ──────────────────────────────────────────
+    with tab_diag:
+        st.subheader("🏥 財務診斷 (Financial Diagnosis)")
+        target_diag = st.selectbox("選擇分析對象", selected_unions, key="diag_select",
+                                   index=0 if selected_unions else None)
+        if not selected_unions:
+            st.info("請先選擇社別")
+        else:
+            diag_df = df_csv[df_csv["社名"] == target_diag].copy()
+            diag_df["年度"] = diag_df["年月"].apply(
+                lambda x: x[:-2] if len(x) >= 3 else x
+            )
+            diag_years = sorted(diag_df["年度"].unique(), reverse=True)
+
+            if not diag_years:
+                st.warning("無資料可供診斷。")
+            else:
+                diag_year = st.selectbox("📅 診斷年度", diag_years, key="diag_year")
+                annual_agg = get_annual_snapshot(diag_df, diag_year)
+
+                curr_idx  = diag_years.index(diag_year)
+                prev_year = diag_years[curr_idx + 1] if curr_idx < len(diag_years) - 1 else None
+                prev_agg  = get_annual_snapshot(diag_df, prev_year) if prev_year else None
+
+                if annual_agg.empty:
+                    st.warning("本年度無資料。")
+                else:
+                    ratios      = calc_ratios(annual_agg)
+                    prev_ratios = calc_ratios(prev_agg) if prev_agg is not None and not prev_agg.empty else None
+
+                    # ── 財務結構 ──────────────────────────────
+                    st.markdown("#### 💰 財務結構")
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        dr = ratios["debt_ratio"]
+                        delta_dr = f"{(dr - prev_ratios['debt_ratio']):+.1%}" if prev_ratios else None
+                        st.metric("負債比（總負債／總資產）", f"{dr:.1%}", delta=delta_dr,
+                                  delta_color="inverse")
+                        lv = rate_ratio(dr, "debt_ratio")
+                        if lv == "green":
+                            st.success("✅ 負債比正常，財務結構穩健。")
+                        elif lv == "yellow":
+                            st.warning("⚠️ 負債比偏高（80–90%），建議控制新增舉債，逐步改善資本結構。")
+                        else:
+                            st.error("🚨 負債比過高（> 90%），自有資金嚴重不足，建議優先降低負債。")
+
+                    with col2:
+                        er = ratios["equity_ratio"]
+                        delta_er = f"{(er - prev_ratios['equity_ratio']):+.1%}" if prev_ratios else None
+                        st.metric("淨值比（淨值／總資產）", f"{er:.1%}", delta=delta_er)
+                        lv = rate_ratio(er, "equity_ratio")
+                        if lv == "green":
+                            st.success("✅ 自有資金充足，資本適足性良好。")
+                        elif lv == "yellow":
+                            st.warning("⚠️ 淨值比偏低（10–20%），建議減少股金退還，加強留存盈餘。")
+                        else:
+                            st.error("🚨 淨值比嚴重不足（< 10%），資本適足性警示，建議優先增資或盈餘轉增資。")
+
+                    st.divider()
+
+                    # ── 獲利能力 ──────────────────────────────
+                    st.markdown("#### 📊 獲利能力")
+                    col3, col4 = st.columns(2)
+
+                    with col3:
+                        xr = ratios["expense_ratio"]
+                        delta_xr = f"{(xr - prev_ratios['expense_ratio']):+.1%}" if prev_ratios else None
+                        st.metric("開支比（總支出／總收入）", f"{xr:.1%}", delta=delta_xr,
+                                  delta_color="inverse")
+                        lv = rate_ratio(xr, "expense_ratio")
+                        if lv == "green":
+                            st.success("✅ 開支比正常，收支控制良好。")
+                        elif lv == "yellow":
+                            st.warning("⚠️ 開支比偏高（95–105%），建議適度控制費用支出。")
+                        else:
+                            st.error("🚨 開支比超標（> 105%），本年度入不敷出，建議全面檢視收支。")
+
+                    with col4:
+                        net = ratios["net_income"]
+                        prev_net = prev_ratios["net_income"] if prev_ratios else None
+                        delta_net = format_large_number(net - prev_net) if prev_net is not None else None
+                        st.metric("本期損益", format_large_number(net), delta=delta_net)
+                        consecutive_loss = (prev_ratios is not None and net < 0
+                                            and prev_ratios["net_income"] < 0)
+                        if consecutive_loss:
+                            st.error("🚨 連續兩年虧損，財務壓力持續，建議緊急檢視業務結構。")
+                        elif net < 0:
+                            st.error("🚨 本年度虧損，建議檢視主要支出項目，評估增收節支方案。")
+                        else:
+                            st.success("✅ 本年度盈餘，獲利能力正常。")
+
+                    st.divider()
+
+                    # ── 科目異常建議 ──────────────────────────
+                    st.markdown("#### 🔍 科目異常建議")
+                    if prev_agg is None or prev_agg.empty:
+                        st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
+                    else:
+                        anomalies = detect_yoy_anomalies(annual_agg, prev_agg)
+                        yoy_advice = get_yoy_advice(anomalies)
+                        if not yoy_advice:
+                            st.success("✅ 各科目年度變動平穩，未發現顯著異常。")
+                        else:
+                            for item in yoy_advice:
+                                fn = st.error if item["level"] == "red" else st.warning
+                                fn(f"**{item['title']}**\n\n→ {item['body']}")
+
+                    st.divider()
+
+                    # ── 歷年趨勢燈號 ──────────────────────────
+                    st.markdown("#### 📈 歷年趨勢燈號")
+                    trend_df = calc_trend(diag_df, diag_years)
+                    if trend_df.empty:
+                        st.info("歷史資料不足，無法顯示趨勢。")
+                    else:
+                        def _cell_color(val, key):
+                            lv = rate_ratio(val, key)
+                            if lv == "green":  return "background-color: #DCFCE7; color: #166534"
+                            if lv == "yellow": return "background-color: #FEF9C3; color: #854D0E"
+                            return "background-color: #FEE2E2; color: #991B1B"
+
+                        def _net_color(val):
+                            return "color: #166534" if val >= 0 else "color: #991B1B; font-weight: bold"
+
+                        st.dataframe(
+                            trend_df.style
+                            .map(lambda v: _cell_color(v, "debt_ratio"),    subset=["負債比"])
+                            .map(lambda v: _cell_color(v, "equity_ratio"),  subset=["淨值比"])
+                            .map(lambda v: _cell_color(v, "expense_ratio"), subset=["開支比"])
+                            .map(_net_color,                                subset=["損益"])
+                            .format({
+                                "負債比": "{:.1%}",
+                                "淨值比": "{:.1%}",
+                                "開支比": "{:.1%}",
+                                "損益":   lambda x: format_large_number(x),
+                            })
+                            .set_properties(**{"font-size": "18px", "text-align": "center"})
+                            .set_properties(**{"text-align": "left"}, subset=["年度"]),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                        # 連續虧損提示
+                        loss_years = trend_df[trend_df["開支比"] > 1.0]["年度"].tolist()
+                        if len(loss_years) >= 2:
+                            st.error(f"⚠️ 歷年中有 {len(loss_years)} 個年度開支比超過 100%（{', '.join(loss_years)}），請持續關注收支趨勢。")
