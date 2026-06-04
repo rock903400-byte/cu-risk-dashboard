@@ -157,6 +157,7 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
                       fillcolor="#94A3B8", **quadrant_kw)
 
         apply_chart_style(fig, theme_bg=THEME)
+        fig.update_xaxes(tickformat=".0%")
         st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
 
         st.markdown("---")
@@ -311,8 +312,8 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         if not all_ym_labels:
             st.warning("尚無可顯示的月份資料。")
             return
-        st.caption("💡 預設顯示近 24 個月；可自行調整起訖")
-        default_start_idx = max(0, len(all_ym_labels) - 24)
+        st.caption("💡 預設顯示近 36 個月；可自行調整起訖")
+        default_start_idx = max(0, len(all_ym_labels) - 36)
         col_s, col_e = st.columns(2)
         with col_s:
             start_label = st.selectbox("📅 起始月份", all_ym_labels, index=default_start_idx)

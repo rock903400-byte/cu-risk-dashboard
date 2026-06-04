@@ -39,7 +39,7 @@ _DEFAULTS = {
     "preloaded_data":     None,   # (data, df_m, df_l, raw_bytes, region_map)
     "preloaded_csv":      None,   # (df, raw_bytes)
     "preloaded_passwords": {},
-    "nav_selection":      "📊 經營總覽與風險診斷",
+    "nav_selection":      "📊 社務診斷",
     "is_district_office": False,
     "confirm_logout":     False,
     "xl_msg":             None,
@@ -242,9 +242,9 @@ with st.sidebar:
 
     nav_options = []
     if st.session_state["preloaded_data"]:
-        nav_options.append("📊 經營總覽與風險診斷")
+        nav_options.append("📊 社務診斷")
     if st.session_state["preloaded_csv"]:
-        nav_options.append("⚖️ 財務戰情室 (明細)")
+        nav_options.append("⚖️ 財報明細")
     if not nav_options:
         nav_options = ["👋 歡迎頁面"]
 
@@ -281,11 +281,11 @@ with st.sidebar:
             st.rerun()
 
 # ── 頁面路由 ──────────────────────────────────────────────
-if st.session_state["nav_selection"] == "📊 經營總覽與風險診斷":
+if st.session_state["nav_selection"] == "📊 社務診斷":
     render_overview_page(data, df_m, df_l, region_data, CONFIG)
 
-elif st.session_state["nav_selection"] == "⚖️ 財務戰情室 (明細)":
-    render_war_room_page(df_csv, [], IS_ADMIN, CONFIG)
+elif st.session_state["nav_selection"] == "⚖️ 財報明細":
+    render_war_room_page(df_csv, IS_ADMIN, CONFIG)
 
 else:
     st.info("👋 歡迎！請由左側上傳資料或選擇功能模組。")
