@@ -12,80 +12,143 @@ from services.diagnosis_service import calc_ratios, rate_ratio, get_yoy_advice, 
 def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
     THEME = config["THEME_BG"]
 
-    tab_bs, tab_is, tab_analysis, tab_raw, tab_diag = st.tabs(
-        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 營運分析", "📑 原始資料", "🏥 財務診斷"]
+    tab_bs, tab_is, tab_overview, tab_deep, tab_raw, tab_diag = st.tabs(
+        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 年度概覽", "🔍 深度分析", "📑 原始資料", "🏥 財務診斷"]
     )
+
+    union_df = df_csv.copy()
+    union_df["年度"] = union_df["年月"].apply(lambda x: x[:-2] if len(x) >= 3 else x)
 
     with st.sidebar:
         st.markdown("<hr>", unsafe_allow_html=True)
         st.markdown('<span class="sidebar-label">🔍 財報篩選</span>', unsafe_allow_html=True)
-        all_months = sorted(df_csv["年月"].unique())
-        selected_month = st.selectbox("選擇年月", all_months, index=len(all_months) - 1)
-        all_unions = sorted(df_csv["社名"].unique())
+        all_unions = sorted(union_df["社名"].unique())
         selected_union = st.selectbox("選擇社別", all_unions, index=0)
 
-    filtered = df_csv[(df_csv["年月"] == selected_month) & (df_csv["社名"] == selected_union)]
+        union_data = union_df[union_df["社名"] == selected_union]
+        all_years = sorted(union_data["年度"].unique(), reverse=True)
+        selected_year = st.selectbox("選擇年度", all_years, index=0) if all_years else None
+
+        year_months = sorted(union_data[union_data["年度"] == selected_year]["年月"].unique()) if selected_year else []
+        selected_month = st.selectbox("選擇月份", year_months, index=len(year_months) - 1) if year_months else None
+
+        if selected_year:
+            total_months = union_data[union_data["年度"] == selected_year]["年月"].nunique()
+            st.caption(f"📊 {selected_year}年資料：{total_months}/12 月")
+
+    filtered = union_df[(union_df["年月"] == selected_month) & (union_df["社名"] == selected_union)] if selected_month else pd.DataFrame()
 
     # ── 資產負債表 ────────────────────────────────────────
     with tab_bs:
         st.subheader("📋 資產負債表 (Balance Sheet)")
-        bs_df = filtered.copy()
-        bs_df["類別"] = bs_df["會計科目"].apply(classify_code)
+        if filtered.empty:
+            st.warning("請選擇月份。")
+        else:
+            bs_df = filtered.copy()
+            bs_df["類別"] = bs_df["會計科目"].apply(classify_code)
 
-        col_a, col_le = st.columns(2)
-        with col_a:
-            st.markdown("#### 【 資產部 】")
-            assets = bs_df[bs_df["類別"] == "資產"].sort_values("會計科目")[
-                ["會計科目", "會科名稱", "當月金額"]
-            ]
-            total_a = assets["當月金額"].sum()
-            disp_a = pd.concat([assets,
-                                 pd.DataFrame([{"會計科目": "", "會科名稱": "資產總計", "當月金額": total_a}])])
-            st.dataframe(
-                disp_a.style.format({"當月金額": "{:,.0f}"})
-                .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
-                                   if x.name == len(disp_a) - 1 else "" for _ in x], axis=1)
-                .set_properties(**{"font-size": "16px"}),
-                use_container_width=True, hide_index=True,
-            )
+            show_compare = st.checkbox("📊 對比上月", value=False, key="bs_compare")
+            prev_month_data = pd.DataFrame()
+            if show_compare and year_months:
+                curr_idx = year_months.index(selected_month)
+                if curr_idx > 0:
+                    prev_month = year_months[curr_idx - 1]
+                    prev_month_data = union_df[(union_df["年月"] == prev_month) & (union_df["社名"] == selected_union)].copy()
+                    prev_month_data["類別"] = prev_month_data["會計科目"].apply(classify_code)
+                else:
+                    st.info("無前期月份可對比。")
 
-        with col_le:
-            st.markdown("#### 【 負債與權益部 】")
-            liabs  = bs_df[bs_df["類別"] == "負債"].sort_values("會計科目")[
-                ["會計科目", "會科名稱", "當月金額"]]
-            equity = bs_df[bs_df["類別"] == "權益"].sort_values("會計科目")[
-                ["會計科目", "會科名稱", "當月金額"]]
-            total_l, total_e = liabs["當月金額"].sum(), equity["當月金額"].sum()
-            le_disp = pd.concat([
-                liabs,
-                pd.DataFrame([{"會計科目": "", "會科名稱": "負債小計",      "當月金額": total_l}]),
-                equity,
-                pd.DataFrame([{"會計科目": "", "會科名稱": "權益小計",      "當月金額": total_e}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "負債與權益總計", "當月金額": total_l + total_e}]),
-            ]).reset_index(drop=True)
-            st.dataframe(
-                le_disp.style.format({"當月金額": "{:,.0f}"})
-                .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
-                                   if "計" in str(x["會科名稱"]) else "" for _ in x], axis=1)
-                .set_properties(**{"font-size": "16px"}),
-                use_container_width=True, hide_index=True,
-            )
-            diff = total_a - (total_l + total_e)
-            if abs(diff) > 0.01:
-                st.error(f"⚠️ 報表不平衡！差額: {diff:,.2f}")
+            if show_compare and not prev_month_data.empty:
+                def _render_bs_with_compare(category_filter, title):
+                    st.markdown(f"#### 【 {title} 】")
+                    curr = bs_df[bs_df["類別"] == category_filter].sort_values("會計科目")[
+                        ["會計科目", "會科名稱", "當月金額"]
+                    ]
+                    prev = prev_month_data[prev_month_data["類別"] == category_filter].sort_values("會計科目")[
+                        ["會計科目", "當月金額"]
+                    ].rename(columns={"當月金額": "上月金額"})
+                    merged = pd.merge(curr, prev, on="會計科目", how="left").fillna(0)
+                    merged["增減"] = merged["當月金額"] - merged["上月金額"]
+                    total_curr = merged["當月金額"].sum()
+                    total_prev = merged["上月金額"].sum()
+                    total_delta = total_curr - total_prev
+                    total_row = pd.DataFrame([{
+                        "會計科目": "", "會科名稱": f"{title}總計",
+                        "當月金額": total_curr, "上月金額": total_prev, "增減": total_delta
+                    }])
+                    disp = pd.concat([merged, total_row], ignore_index=True)
+
+                    def _style_bs_compare(row):
+                        if row.name == len(disp) - 1:
+                            return ["font-weight: bold; background-color: #f0f2f6"] * len(row)
+                        styles = [""] * len(row)
+                        if row["增減"] > 0:
+                            styles[4] = "color: #10B981; font-weight: bold"
+                        elif row["增減"] < 0:
+                            styles[4] = "color: #EF4444; font-weight: bold"
+                        return styles
+
+                    st.dataframe(
+                        disp.style.format({"當月金額": "{:,.0f}", "上月金額": "{:,.0f}", "增減": "{:+,.0f}"})
+                        .apply(_style_bs_compare, axis=1)
+                        .set_properties(**{"font-size": "16px"}),
+                        use_container_width=True, hide_index=True,
+                    )
+
+                _render_bs_with_compare("資產", "資產部")
+                _render_bs_with_compare("負債", "負債部")
+                _render_bs_with_compare("權益", "權益部")
+            else:
+                col_a, col_le = st.columns(2)
+                with col_a:
+                    st.markdown("#### 【 資產部 】")
+                    assets = bs_df[bs_df["類別"] == "資產"].sort_values("會計科目")[
+                        ["會計科目", "會科名稱", "當月金額"]
+                    ]
+                    total_a = assets["當月金額"].sum()
+                    disp_a = pd.concat([assets,
+                                         pd.DataFrame([{"會計科目": "", "會科名稱": "資產總計", "當月金額": total_a}])])
+                    st.dataframe(
+                        disp_a.style.format({"當月金額": "{:,.0f}"})
+                        .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
+                                           if x.name == len(disp_a) - 1 else "" for _ in x], axis=1)
+                        .set_properties(**{"font-size": "16px"}),
+                        use_container_width=True, hide_index=True,
+                    )
+
+                with col_le:
+                    st.markdown("#### 【 負債與權益部 】")
+                    liabs  = bs_df[bs_df["類別"] == "負債"].sort_values("會計科目")[
+                        ["會計科目", "會科名稱", "當月金額"]]
+                    equity = bs_df[bs_df["類別"] == "權益"].sort_values("會計科目")[
+                        ["會計科目", "會科名稱", "當月金額"]]
+                    total_l, total_e = liabs["當月金額"].sum(), equity["當月金額"].sum()
+                    le_disp = pd.concat([
+                        liabs,
+                        pd.DataFrame([{"會計科目": "", "會科名稱": "負債小計",      "當月金額": total_l}]),
+                        equity,
+                        pd.DataFrame([{"會計科目": "", "會科名稱": "權益小計",      "當月金額": total_e}]),
+                        pd.DataFrame([{"會計科目": "", "會科名稱": "負債與權益總計", "當月金額": total_l + total_e}]),
+                    ]).reset_index(drop=True)
+                    st.dataframe(
+                        le_disp.style.format({"當月金額": "{:,.0f}"})
+                        .apply(lambda x: ["font-weight: bold; background-color: #f0f2f6"
+                                           if "計" in str(x["會科名稱"]) else "" for _ in x], axis=1)
+                        .set_properties(**{"font-size": "16px"}),
+                        use_container_width=True, hide_index=True,
+                    )
+                    diff = total_a - (total_l + total_e)
+                    if abs(diff) > 0.01:
+                        st.error(f"⚠️ 報表不平衡！差額: {diff:,.2f}")
 
     # ── 綜合損益表 ────────────────────────────────────────
     with tab_is:
         st.subheader("📊 年度綜合損益表 (Annual Income Statement)")
-        is_df = df_csv[df_csv["社名"] == selected_union].copy()
-        is_df["年度"] = is_df["年月"].apply(lambda x: x[:-2] if len(x) >= 3 else x)
-        is_years = sorted(is_df["年度"].unique(), reverse=True)
-
-        if not is_years:
+        if not selected_year:
             st.warning("無資料可供展示。")
         else:
-            is_year = st.selectbox("📅 選擇年度", is_years, key="is_year")
-            is_annual = get_annual_snapshot(is_df, is_year)
+            is_df = union_df[union_df["社名"] == selected_union].copy()
+            is_annual = get_annual_snapshot(is_df, selected_year)
             is_annual = is_annual[is_annual["會計科目"].astype(str).str.match(r"^[45]")].copy()
             is_annual["類別"] = is_annual["會計科目"].apply(classify_code)
 
@@ -131,28 +194,14 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 use_container_width=True, hide_index=True,
             )
 
-    # ── 營運分析 ──────────────────────────────────────────
-    with tab_analysis:
-        st.subheader("📈 年度營運分析 (Annual Analysis)")
-        analysis_df = df_csv[df_csv["社名"] == selected_union].copy()
-        analysis_df["年度"] = analysis_df["年月"].apply(
-            lambda x: x[:-2] if len(x) >= 3 else x
-        )
-        all_years = sorted(analysis_df["年度"].unique(), reverse=True)
-
-        if not all_years:
+    # ── 年度概覽 ──────────────────────────────────────────
+    with tab_overview:
+        st.subheader("📈 年度營運概覽 (Annual Overview)")
+        if not selected_year:
             st.warning("無資料可供展示。")
         else:
-            col_y1, col_y2 = st.columns([1.5, 2.5])
-            with col_y1:
-                selected_year = st.selectbox("📅 選擇分析年度", all_years)
-            with col_y2:
-                compare_options = ["（不比較）"] + [y for y in all_years if y != selected_year]
-                compare_choice = st.selectbox("📅 對比年度（選填）", compare_options)
-                compare_year = None if compare_choice == "（不比較）" else compare_choice
-
+            analysis_df = union_df[union_df["社名"] == selected_union].copy()
             annual_agg = get_annual_snapshot(analysis_df, selected_year)
-            compare_agg = get_annual_snapshot(analysis_df, compare_year) if compare_year else None
 
             curr_idx  = all_years.index(selected_year)
             prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
@@ -167,6 +216,28 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 render_waterfall(annual_agg, selected_year, THEME)
 
             st.divider()
+
+            if not analysis_df.empty:
+                render_yearly_trend(analysis_df, THEME)
+
+    # ── 深度分析 ──────────────────────────────────────────
+    with tab_deep:
+        st.subheader("🔍 深度分析 (Deep Analysis)")
+        if not selected_year:
+            st.warning("無資料可供展示。")
+        else:
+            analysis_df = union_df[union_df["社名"] == selected_union].copy()
+
+            compare_options = ["（不比較）"] + [y for y in all_years if y != selected_year]
+            compare_choice = st.selectbox("📅 對比年度（選填）", compare_options, key="deep_compare")
+            compare_year = None if compare_choice == "（不比較）" else compare_choice
+
+            annual_agg = get_annual_snapshot(analysis_df, selected_year)
+            compare_agg = get_annual_snapshot(analysis_df, compare_year) if compare_year else None
+
+            curr_idx  = all_years.index(selected_year)
+            prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+            prev_agg  = get_annual_snapshot(analysis_df, prev_year) if prev_year else None
 
             st.markdown(f"#### 【 {selected_year} 年度會計科目變動偵測 (YoY) 與科目排名 】")
             col_left, col_right = st.columns([4, 6])
@@ -190,38 +261,30 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 else:
                     st.info("本年度無排名資料。")
 
-            st.divider()
-
-            if not analysis_df.empty:
-                render_yearly_trend(analysis_df, THEME)
-
     # ── 原始資料 ──────────────────────────────────────────
     with tab_raw:
         st.subheader("篩選後的原始數據")
-        st.dataframe(
-            filtered.style
-            .format({"當月金額": "{:,.0f}"})
-            .set_properties(**{"font-size": "16px"}),
-            use_container_width=True,
-        )
+        if filtered.empty:
+            st.warning("請選擇月份。")
+        else:
+            st.dataframe(
+                filtered.style
+                .format({"當月金額": "{:,.0f}"})
+                .set_properties(**{"font-size": "16px"}),
+                use_container_width=True,
+            )
 
     # ── 財務診斷 ──────────────────────────────────────────
     with tab_diag:
         st.subheader("🏥 財務診斷 (Financial Diagnosis)")
-        diag_df = df_csv[df_csv["社名"] == selected_union].copy()
-        diag_df["年度"] = diag_df["年月"].apply(
-            lambda x: x[:-2] if len(x) >= 3 else x
-        )
-        diag_years = sorted(diag_df["年度"].unique(), reverse=True)
-
-        if not diag_years:
+        if not selected_year:
             st.warning("無資料可供診斷。")
         else:
-            diag_year = st.selectbox("📅 診斷年度", diag_years, key="diag_year")
-            annual_agg = get_annual_snapshot(diag_df, diag_year)
+            diag_df = union_df[union_df["社名"] == selected_union].copy()
+            annual_agg = get_annual_snapshot(diag_df, selected_year)
 
-            curr_idx  = diag_years.index(diag_year)
-            prev_year = diag_years[curr_idx + 1] if curr_idx < len(diag_years) - 1 else None
+            curr_idx  = all_years.index(selected_year)
+            prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
             prev_agg  = get_annual_snapshot(diag_df, prev_year) if prev_year else None
 
             if annual_agg.empty:
@@ -313,7 +376,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 # ── 歷年趨勢燈號 ──────────────────────────
                 st.markdown("#### 📈 歷年趨勢燈號")
                 with st.spinner("計算歷年趨勢..."):
-                    trend_df = calc_trend(diag_df, diag_years)
+                    trend_df = calc_trend(diag_df, all_years)
                 if trend_df.empty:
                     st.info("歷史資料不足，無法顯示趨勢。")
                 else:
