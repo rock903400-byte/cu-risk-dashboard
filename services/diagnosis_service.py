@@ -40,8 +40,8 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
 def rate_ratio(value: float, key: str) -> str:
     t = THRESHOLDS[key]
     if key == "equity_ratio":
-        if value <= t["red"]:   return "red"
-        if value <= t["green"]: return "yellow"
+        if value <= t["red"]:  return "red"
+        if value < t["green"]: return "yellow"
         return "green"
     else:
         if value >= t["red"]:   return "red"
