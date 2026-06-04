@@ -4,7 +4,7 @@ import streamlit as st
 from components.charts import render_ranking_tabs, render_waterfall, render_yearly_trend, render_yoy_anomalies
 from components.metrics import render_kpi_cards
 from data.classifier import classify_code
-from data.utils import safe_div, format_large_number
+from data.utils import format_large_number
 from services.finance_service import get_annual_snapshot, detect_yoy_anomalies
 from services.diagnosis_service import calc_ratios, rate_ratio, get_yoy_advice, calc_trend
 
@@ -26,19 +26,6 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
         selected_unions = st.multiselect("選擇查看互助社", all_unions, default=all_unions)
 
     filtered = df_csv[(df_csv["年月"] == selected_month) & (df_csv["社名"].isin(selected_unions))]
-
-    st.markdown(f"### 📅 {selected_month} 財務概況快照 (Balance Sheet Snapshot)")
-
-    total_assets = filtered[filtered["會計科目"].str.startswith("1")]["當月金額"].sum()
-    total_liabs  = filtered[filtered["會計科目"].str.startswith("2")]["當月金額"].sum()
-    total_equity = filtered[filtered["會計科目"].str.startswith("3")]["當月金額"].sum()
-
-    ck1, ck2, ck3, ck4 = st.columns(4)
-    ck1.metric("總資產規模", format_large_number(total_assets))
-    ck2.metric("總負債規模", format_large_number(total_liabs))
-    ck3.metric("淨值總額 (自有資金)", format_large_number(total_equity))
-    ck4.metric("淨值佔資產比", f"{safe_div(total_equity, total_assets):.1%}")
-    st.divider()
 
     # ── 資產負債表 ────────────────────────────────────────
     with tab_bs:
@@ -94,50 +81,60 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
 
     # ── 綜合損益表 ────────────────────────────────────────
     with tab_is:
-        st.subheader("📊 綜合損益表 (Income Statement)")
+        st.subheader("📊 年度綜合損益表 (Annual Income Statement)")
         target_is = st.selectbox("選擇互助社", selected_unions, key="is_select", index=0 if selected_unions else None)
         if not selected_unions:
             st.info("請先選擇互助社")
         else:
-            is_df = filtered[filtered["社名"] == target_is].copy()
-            is_df["類別"] = is_df["會計科目"].apply(classify_code)
+            is_df = df_csv[df_csv["社名"] == target_is].copy()
+            is_df["年度"] = is_df["年月"].apply(lambda x: x[:-2] if len(x) >= 3 else x)
+            is_years = sorted(is_df["年度"].unique(), reverse=True)
 
-            incomes  = is_df[is_df["類別"] == "收入"].sort_values("會計科目")[
-                ["會計科目", "會科名稱", "當月金額"]]
-            expenses = is_df[is_df["類別"] == "支出"].sort_values("會計科目")[
-                ["會計科目", "會科名稱", "當月金額"]]
-            rev_total  = incomes["當月金額"].sum()
-            exp_total  = expenses["當月金額"].sum()
-            net_profit = rev_total - exp_total
+            if not is_years:
+                st.warning("無資料可供展示。")
+            else:
+                is_year = st.selectbox("📅 選擇年度", is_years, key="is_year")
+                is_annual = get_annual_snapshot(is_df, is_year)
+                is_annual = is_annual[is_annual["會計科目"].astype(str).str.match(r"^[45]")].copy()
+                is_annual["類別"] = is_annual["會計科目"].apply(classify_code)
 
-            is_disp = pd.concat([
-                pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "當月金額": None}]),
-                incomes,
-                pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "當月金額": rev_total}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "當月金額": None}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "當月金額": None}]),
-                expenses,
-                pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "當月金額": exp_total}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "當月金額": None}]),
-                pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "當月金額": net_profit}]),
-            ]).reset_index(drop=True)
+                incomes  = is_annual[is_annual["類別"] == "收入"].sort_values("會計科目")[
+                    ["會計科目", "會科名稱", "當月金額"]]
+                expenses = is_annual[is_annual["類別"] == "支出"].sort_values("會計科目")[
+                    ["會計科目", "會科名稱", "當月金額"]]
+                rev_total  = incomes["當月金額"].sum()
+                exp_total  = expenses["當月金額"].sum()
+                net_profit = rev_total - exp_total
 
-            def style_is(row):
-                if "合計" in str(row["會科名稱"]):
-                    return ["font-weight: bold; background-color: #f0f2f6"] * len(row)
-                if "淨利" in str(row["會科名稱"]):
-                    bg = "#DCFCE7" if net_profit >= 0 else "#FEE2E2"
-                    return [f"font-weight: bold; background-color: {bg}; border-top: 2px solid black"] * len(row)
-                if "--" in str(row["會科名稱"]):
-                    return ["color: #64748B; font-style: italic"] * len(row)
-                return [""] * len(row)
+                _nan = float("nan")
+                is_disp = pd.concat([
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "年度累計金額": _nan}]),
+                    incomes.rename(columns={"當月金額": "年度累計金額"}),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "年度累計金額": rev_total}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": _nan}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "年度累計金額": _nan}]),
+                    expenses.rename(columns={"當月金額": "年度累計金額"}),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "年度累計金額": exp_total}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": _nan}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "年度累計金額": net_profit}]),
+                ]).reset_index(drop=True)
 
-            st.dataframe(
-                is_disp.style.format({"當月金額": "{:,.0f}"}, na_rep="")
-                .apply(style_is, axis=1)
-                .set_properties(**{"font-size": "18px"}),
-                use_container_width=True, hide_index=True,
-            )
+                def style_is(row):
+                    if "合計" in str(row["會科名稱"]):
+                        return ["font-weight: bold; background-color: #f0f2f6"] * len(row)
+                    if "淨利" in str(row["會科名稱"]):
+                        bg = "#DCFCE7" if net_profit >= 0 else "#FEE2E2"
+                        return [f"font-weight: bold; background-color: {bg}; border-top: 2px solid black"] * len(row)
+                    if "--" in str(row["會科名稱"]):
+                        return ["color: #64748B; font-style: italic"] * len(row)
+                    return [""] * len(row)
+
+                st.dataframe(
+                    is_disp.style.format({"年度累計金額": "{:,.0f}"}, na_rep="")
+                    .apply(style_is, axis=1)
+                    .set_properties(**{"font-size": "18px"}),
+                    use_container_width=True, hide_index=True,
+                )
 
     # ── 營運分析 ──────────────────────────────────────────
     with tab_analysis:
