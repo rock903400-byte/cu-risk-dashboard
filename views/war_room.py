@@ -106,17 +106,21 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
                 exp_total  = expenses["當月金額"].sum()
                 net_profit = rev_total - exp_total
 
-                _nan = float("nan")
+                def _fmt(v):
+                    return "" if v is None or (isinstance(v, float) and pd.isna(v)) else f"{v:,.0f}"
+
                 is_disp = pd.concat([
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "年度累計金額": _nan}]),
-                    incomes.rename(columns={"當月金額": "年度累計金額"}),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "年度累計金額": rev_total}]),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": _nan}]),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "年度累計金額": _nan}]),
-                    expenses.rename(columns={"當月金額": "年度累計金額"}),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "年度累計金額": exp_total}]),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": _nan}]),
-                    pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "年度累計金額": net_profit}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業收入 --",    "年度累計金額": ""}]),
+                    incomes.rename(columns={"當月金額": "年度累計金額"}).assign(
+                        年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業收入合計",      "年度累計金額": _fmt(rev_total)}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "-- 營業支出 --",    "年度累計金額": ""}]),
+                    expenses.rename(columns={"當月金額": "年度累計金額"}).assign(
+                        年度累計金額=lambda d: d["年度累計金額"].map(_fmt)),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "營業支出合計",      "年度累計金額": _fmt(exp_total)}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "",                  "年度累計金額": ""}]),
+                    pd.DataFrame([{"會計科目": "", "會科名稱": "本期淨利（淨損）",  "年度累計金額": _fmt(net_profit)}]),
                 ]).reset_index(drop=True)
 
                 def style_is(row):
@@ -130,7 +134,7 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
                     return [""] * len(row)
 
                 st.dataframe(
-                    is_disp.style.format({"年度累計金額": "{:,.0f}"}, na_rep="")
+                    is_disp.style
                     .apply(style_is, axis=1)
                     .set_properties(**{"font-size": "18px"}),
                     use_container_width=True, hide_index=True,
