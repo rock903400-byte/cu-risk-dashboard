@@ -157,8 +157,13 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
                 col_y1, col_y2 = st.columns([1.5, 2.5])
                 with col_y1:
                     selected_year = st.selectbox("📅 選擇分析年度", all_years)
+                with col_y2:
+                    compare_options = ["（不比較）"] + [y for y in all_years if y != selected_year]
+                    compare_choice = st.selectbox("📅 對比年度（選填）", compare_options)
+                    compare_year = None if compare_choice == "（不比較）" else compare_choice
 
                 annual_agg = get_annual_snapshot(analysis_df, selected_year)
+                compare_agg = get_annual_snapshot(analysis_df, compare_year) if compare_year else None
 
                 curr_idx  = all_years.index(selected_year)
                 prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
@@ -185,7 +190,12 @@ def render_war_room_page(df_csv: pd.DataFrame, selected_unions: list[str],
                 with col_right:
                     st.markdown("**關鍵科目金額排名（各類 Top 10）**")
                     if not annual_agg.empty:
-                        render_ranking_tabs(annual_agg, THEME)
+                        render_ranking_tabs(
+                            annual_agg, THEME,
+                            compare_agg=compare_agg,
+                            year_label=selected_year,
+                            compare_label=compare_year or "",
+                        )
                     else:
                         st.info("本年度無排名資料。")
 

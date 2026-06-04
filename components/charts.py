@@ -99,14 +99,24 @@ def render_yoy_anomalies(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame,
     )
 
 
-def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str):
+def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,
+                        compare_agg: pd.DataFrame | None = None,
+                        year_label: str = "", compare_label: str = ""):
     """
     Bug C 修復：改用 st.tabs 取代 facet_col，每個 tab 各自繪製單類別 Top 10。
+    compare_agg 提供時，切換為雙年分組橫條圖。
     """
     annual_agg = annual_agg.copy()
     annual_agg["類別"] = annual_agg["會計科目"].apply(classify_code)
     rank_df = annual_agg[annual_agg["當月金額"].abs() > 0].copy()
     rank_df["顯示金額"] = rank_df["當月金額"].abs()
+
+    comp_rank = None
+    if compare_agg is not None and not compare_agg.empty:
+        comp_df = compare_agg.copy()
+        comp_df["類別"] = comp_df["會計科目"].apply(classify_code)
+        comp_rank = comp_df[comp_df["當月金額"].abs() > 0].copy()
+        comp_rank["顯示金額"] = comp_rank["當月金額"].abs()
 
     tabs = st.tabs(CATEGORY_TABS)
     for tab, cat_name in zip(tabs, CATEGORY_NAMES):
@@ -120,27 +130,63 @@ def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str):
             if cat_df.empty:
                 st.info(f"本年度無「{cat_name}」類資料。")
                 continue
-            fig = px.bar(
-                cat_df, x="顯示金額", y="會科名稱",
-                orientation="h",
-                color_discrete_sequence=[CATEGORY_COLORS.get(cat_name, "#94A3B8")],
-                labels={"顯示金額": "金額", "會科名稱": "科目"},
-            )
-            max_val = cat_df["顯示金額"].max()
-            fig.update_traces(
-                text=[format_large_number(v) for v in cat_df["顯示金額"]],
-                textposition="outside",
-                textfont=dict(size=13),
-            )
-            fig.update_layout(
-                plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
-                margin=dict(t=30, b=30, l=10, r=30),
-                dragmode=False, showlegend=False, height=380,
-                font=dict(size=14),
-                xaxis=dict(range=[0, max_val * 1.35], fixedrange=True),
-            )
-            fig.update_yaxes(fixedrange=True, categoryorder="total ascending")
-            st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+
+            cat_color = CATEGORY_COLORS.get(cat_name, "#94A3B8")
+
+            if comp_rank is not None:
+                top_accounts = cat_df["會科名稱"].tolist()
+                comp_cat = (
+                    comp_rank[
+                        (comp_rank["類別"] == cat_name) &
+                        (comp_rank["會科名稱"].isin(top_accounts))
+                    ][["會科名稱", "顯示金額"]]
+                )
+                combined = pd.concat([
+                    cat_df[["會科名稱", "顯示金額"]].assign(年度=year_label),
+                    comp_cat.assign(年度=compare_label),
+                ], ignore_index=True)
+                combined["金額標籤"] = combined["顯示金額"].apply(format_large_number)
+                max_val = combined["顯示金額"].max()
+                fig = px.bar(
+                    combined, x="顯示金額", y="會科名稱",
+                    color="年度", barmode="group", orientation="h",
+                    text="金額標籤",
+                    color_discrete_map={year_label: cat_color, compare_label: "#94A3B8"},
+                    labels={"顯示金額": "金額", "會科名稱": "科目"},
+                )
+                fig.update_traces(textposition="outside", textfont=dict(size=12))
+                fig.update_layout(
+                    plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
+                    margin=dict(t=10, b=30, l=10, r=30),
+                    dragmode=False, showlegend=True, height=430,
+                    font=dict(size=14),
+                    xaxis=dict(range=[0, max_val * 1.5], fixedrange=True),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                )
+                fig.update_yaxes(fixedrange=True, categoryorder="total ascending")
+                st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+            else:
+                max_val = cat_df["顯示金額"].max()
+                fig = px.bar(
+                    cat_df, x="顯示金額", y="會科名稱",
+                    orientation="h",
+                    color_discrete_sequence=[cat_color],
+                    labels={"顯示金額": "金額", "會科名稱": "科目"},
+                )
+                fig.update_traces(
+                    text=[format_large_number(v) for v in cat_df["顯示金額"]],
+                    textposition="outside",
+                    textfont=dict(size=13),
+                )
+                fig.update_layout(
+                    plot_bgcolor=theme_bg, paper_bgcolor=theme_bg,
+                    margin=dict(t=30, b=30, l=10, r=30),
+                    dragmode=False, showlegend=False, height=380,
+                    font=dict(size=14),
+                    xaxis=dict(range=[0, max_val * 1.35], fixedrange=True),
+                )
+                fig.update_yaxes(fixedrange=True, categoryorder="total ascending")
+                st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
 
 
 def render_yearly_trend(analysis_df: pd.DataFrame, theme_bg: str):
