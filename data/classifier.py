@@ -6,13 +6,13 @@
 def classify(p: dict, thresholds: dict) -> tuple[str, str]:
     """
     p 包含各項指標：M0-M3 (社員), S0-S3 (股金), R0-R1 (開支比),
-    O0-O1 (逾期貸款金額), eOvd (逾放比), eLoan (貸放比), shrG, memG
+    O0-O1 (逾期貸款金額), eOvd (逾放比), eLoan (貸放比), sLoan (去年貸放比), shrG, memG
     回傳 (診斷狀態, 建議留意事項)
     """
     T = thresholds
 
     c1 = p["R0"] > T["high_risk_income_ratio"] and p["R1"] > T["high_risk_income_ratio"]
-    c2 = p["eLoan"] < T["high_risk_loan_ratio"]
+    c2 = p["eLoan"] < T["high_risk_loan_ratio"] and p["eLoan"] < p["sLoan"]
     c3 = p["eOvd"] > T["high_risk_ovd_ratio"] and p["O0"] > p["O1"]
     c4 = p["M0"] < p["M1"] < p["M2"] < p["M3"]
     c5 = p["S0"] < p["S1"] < p["S2"] < p["S3"]

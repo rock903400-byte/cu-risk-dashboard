@@ -19,7 +19,7 @@ def _base():
         S0=1000, S1=950, S2=900, S3=850,
         R0=0.8, R1=0.8,
         O0=50, O1=60,
-        eOvd=0.01, sOvd=0.01, eLoan=0.6,
+        eOvd=0.01, sOvd=0.01, eLoan=0.6, sLoan=0.65,
         memG=0.05, shrG=0.05,
     )
 
@@ -27,7 +27,7 @@ def _base():
 class TestClassify:
     def test_重點輔導_c1_c2(self):
         p = _base()
-        p.update(R0=1.1, R1=1.1, eLoan=0.05)  # c1 + c2
+        p.update(R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.07)  # c1 + c2 (貸放比<10%且較去年減少)
         status, reason = classify(p, THRESHOLDS)
         assert status == "🚨 特別關懷"
         assert "連兩年虧損" in reason
@@ -61,6 +61,12 @@ class TestClassify:
         p.update(R0=1.1, R1=1.1)  # 只有 c1，不足兩項
         status, _ = classify(p, THRESHOLDS)
         assert status != "🚨 特別關懷"
+
+    def test_貸放比低但較去年增加不觸發c2(self):
+        p = _base()
+        p.update(R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.03)  # eLoan < 10% 但較去年增加，不觸發 c2
+        status, _ = classify(p, THRESHOLDS)
+        assert status != "🚨 特別關懷"  # 僅 c1，不足兩項
 
     def test_流動性緊繃(self):
         p = _base()

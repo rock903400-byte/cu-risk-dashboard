@@ -19,7 +19,7 @@ _CACHE_VER = "v3"  # spinner 顯示用；真正 bust cache 的是函式內的 _V
 
 @st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
-    _VER = "v5"  # bump when classifier.py logic changes; this string IS in bytecode
+    _VER = "v6"  # bump when classifier.py logic changes; this string IS in bytecode
     try:
         with pd.ExcelFile(io.BytesIO(file_bytes)) as xls:
             if not all(s in xls.sheet_names for s in sheets.values()):
@@ -81,6 +81,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         O0, O1 = _get_value(ls, "逾期貸款", T0), _get_value(ls, "逾期貸款", T1)
         eOvd   = _get_value(ls, "逾放比",  T0)
         eLoan  = _get_value(ms, "貸放比",  T0)
+        sLoan  = _get_value(ms, "貸放比",  T1)
         memG   = safe_div(M0 - M1, M1)
         shrG   = safe_div(S0 - S1, S1)
 
@@ -88,7 +89,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
                  S0=S0, S1=S1, S2=S2, S3=S3,
                  R0=R0, R1=R1, O0=O0, O1=O1,
                  eOvd=eOvd, sOvd=_get_value(ls, "逾放比", T1),
-                 eLoan=eLoan, memG=memG, shrG=shrG)
+                 eLoan=eLoan, sLoan=sLoan, memG=memG, shrG=shrG)
         status, reason = classify(p, thresholds)
 
         curr_M    = _get_value(ms, "社員數", max_d)
