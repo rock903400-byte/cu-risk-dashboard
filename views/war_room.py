@@ -12,8 +12,8 @@ from services.diagnosis_service import calc_ratios, rate_ratio, calc_trend
 def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
     THEME = config["THEME_BG"]
 
-    tab_bs, tab_is, tab_overview, tab_deep, tab_raw, tab_diag = st.tabs(
-        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 年度概覽", "🔍 深度分析", "📑 原始資料", "🏥 財務診斷"]
+    tab_bs, tab_is, tab_overview, tab_deep, tab_diag, tab_raw = st.tabs(
+        ["⚖️ 資產負債表", "📉 綜合損益表", "📈 年度概覽", "🔍 深度分析", "🏥 財務診斷", "📑 原始資料"]
     )
 
     union_df = df_csv.copy()
@@ -355,19 +355,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 else:
                     st.info("本年度無排名資料。")
 
-    # ── 原始資料 ──────────────────────────────────────────
-    with tab_raw:
-        st.subheader("篩選後的原始數據")
-        if filtered.empty:
-            st.warning("請選擇月份。")
-        else:
-            st.dataframe(
-                filtered.style
-                .format({"當月金額": "{:,.0f}"})
-                .set_properties(**{"font-size": "16px"}),
-                use_container_width=True,
-            )
-
     # ── 財務診斷 ──────────────────────────────────────────
     with tab_diag:
         st.subheader("🏥 財務診斷 (Financial Diagnosis)")
@@ -488,3 +475,48 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                     loss_years = trend_df[trend_df["開支比"] > 1.0]["年度"].tolist()
                     if len(loss_years) >= 2:
                         st.error(f"⚠️ 歷年中有 {len(loss_years)} 個年度開支比超過 100%（{', '.join(loss_years)}），請持續關注收支趨勢。")
+
+                    st.markdown("---")
+                    st.markdown("**📊 趨勢圖表**")
+                    import plotly.graph_objects as go
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(
+                        x=trend_df["年度"], y=trend_df["負債比"] * 100,
+                        mode="lines+markers", name="負債比",
+                        line=dict(color="#EF4444", width=3), marker=dict(size=8)
+                    ))
+                    fig.add_trace(go.Scatter(
+                        x=trend_df["年度"], y=trend_df["淨值比"] * 100,
+                        mode="lines+markers", name="淨值比",
+                        line=dict(color="#10B981", width=3), marker=dict(size=8)
+                    ))
+                    fig.add_trace(go.Scatter(
+                        x=trend_df["年度"], y=trend_df["開支比"] * 100,
+                        mode="lines+markers", name="開支比",
+                        line=dict(color="#3B82F6", width=3), marker=dict(size=8)
+                    ))
+                    fig.add_hline(y=90, line_dash="dash", line_color="#EF4444", opacity=0.5,
+                                  annotation_text="負債比警戒線 90%")
+                    fig.add_hline(y=100, line_dash="dash", line_color="#3B82F6", opacity=0.5,
+                                  annotation_text="開支比警戒線 100%")
+                    fig.update_layout(
+                        height=350,
+                        yaxis_title="百分比 (%)",
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                        margin=dict(l=50, r=20, t=20, b=50),
+                        font=dict(size=16),
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+    # ── 原始資料 ──────────────────────────────────────────
+    with tab_raw:
+        st.subheader("篩選後的原始數據")
+        if filtered.empty:
+            st.warning("請選擇月份。")
+        else:
+            st.dataframe(
+                filtered.style
+                .format({"當月金額": "{:,.0f}"})
+                .set_properties(**{"font-size": "16px"}),
+                use_container_width=True,
+            )

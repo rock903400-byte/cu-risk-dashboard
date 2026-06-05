@@ -9,7 +9,8 @@ def get_annual_snapshot(df: pd.DataFrame, year_str: str, same_months: list[str] 
     Parameters:
         df: 原始資料
         year_str: 年度字串 (如 "113")
-        same_months: 損益科目只保留指定月份列表（用於年度對比時確保月份相同）
+        same_months: 損益科目只保留同期月份（用於年度對比時確保月份相同）
+                       傳入今年月份如 ["11501", "11502"]，會自動比對去年的 "11401", "11402"
     """
     y_df = df[df["年度"] == year_str].copy()
     if y_df.empty:
@@ -19,7 +20,8 @@ def get_annual_snapshot(df: pd.DataFrame, year_str: str, same_months: list[str] 
     pl = y_df[y_df["會計科目"].str.match(r"^[45]")]
     
     if same_months is not None:
-        pl = pl[pl["年月"].isin(same_months)]
+        month_suffixes = {m[-2:] for m in same_months}
+        pl = pl[pl["年月"].str[-2:].isin(month_suffixes)]
     
     pl_sum = pl.groupby(["會計科目", "會科名稱"]).agg({"當月金額": "sum"}).reset_index()
     return pd.concat([bs[["會計科目", "會科名稱", "當月金額"]], pl_sum])
