@@ -340,7 +340,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             curr_idx  = all_years.index(selected_year)
             prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
             curr_months_list = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
-            prev_annual_agg = get_annual_snapshot(analysis_df, selected_year)
             prev_agg  = get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list) if prev_year else None
 
             st.markdown(f"#### 📊 年度科目變動偵測")
@@ -349,7 +348,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 if len(curr_months_list) < len(prev_months_list):
                     st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
                 with st.spinner("偵測年度變動..."):
-                    render_yoy_anomalies(prev_annual_agg, prev_agg, selected_year, prev_year)
+                    render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
             else:
                 st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
 
