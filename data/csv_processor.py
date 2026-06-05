@@ -16,6 +16,9 @@ def process_csv_final(file_bytes: bytes) -> pd.DataFrame:
             .astype(int)
             .astype(str)
         )
+        if "會科名稱" in df.columns:
+            df["會科名稱"] = df["會科名稱"].fillna("(未分類)")
+            df["會科名稱"] = df["會科名稱"].replace({0: "(未分類)", "0": "(未分類)", "": "(未分類)"})
         return df
     except Exception as e:
         raise ValueError(f"CSV 解析失敗: {e}")
