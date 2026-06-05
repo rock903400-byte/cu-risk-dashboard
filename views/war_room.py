@@ -325,9 +325,22 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             annual_agg = get_annual_snapshot(analysis_df, selected_year)
             compare_agg = get_annual_snapshot(analysis_df, compare_year) if compare_year else None
 
+            if compare_year:
+                _sel_months = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
+                _cmp_months = sorted(analysis_df[analysis_df["年度"] == compare_year]["年月"].unique())
+                _sel_suffixes = {m[-2:] for m in _sel_months}
+                _cmp_suffixes = {m[-2:] for m in _cmp_months}
+                _common_suffixes = sorted(_sel_suffixes & _cmp_suffixes)
+                _common_months = [m for m in _sel_months if m[-2:] in _common_suffixes]
+                if len(_common_months) < len(_sel_months) or len(_common_months) < len(_cmp_months):
+                    st.info(f"ℹ️ {selected_year}年有 {len(_sel_months)} 個月、{compare_year}年有 {len(_cmp_months)} 個月資料，已自動取同期 {len(_common_months)} 個月進行公平對比。")
+                    annual_agg = get_annual_snapshot(analysis_df, selected_year, same_months=_common_months)
+                    compare_agg = get_annual_snapshot(analysis_df, compare_year, same_months=_common_months)
+
             curr_idx  = all_years.index(selected_year)
             prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
             curr_months_list = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
+            prev_annual_agg = get_annual_snapshot(analysis_df, selected_year)
             prev_agg  = get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list) if prev_year else None
 
             st.markdown(f"#### 📊 年度科目變動偵測")
@@ -336,7 +349,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 if len(curr_months_list) < len(prev_months_list):
                     st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
                 with st.spinner("偵測年度變動..."):
-                    render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
+                    render_yoy_anomalies(prev_annual_agg, prev_agg, selected_year, prev_year)
             else:
                 st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
 
