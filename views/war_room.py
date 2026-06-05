@@ -330,6 +330,10 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
             with col_left:
                 if prev_year and prev_agg is not None and not prev_agg.empty:
+                    curr_months = analysis_df[analysis_df["年度"] == selected_year]["年月"].nunique()
+                    prev_months = analysis_df[analysis_df["年度"] == prev_year]["年月"].nunique()
+                    if curr_months < prev_months:
+                        st.warning(f"⚠️ {selected_year}年僅有 {curr_months} 個月資料，{prev_year}年有 {prev_months} 個月，損益科目對比可能不公允。")
                     with st.spinner("偵測年度變動..."):
                         render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
                 else:
@@ -443,27 +447,15 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
                 st.divider()
 
-                # ── 放款收益 ──────────────────────────────
-                st.markdown("#### 🏦 放款收益")
-                lir = ratios["loan_interest_rate"]
-                prev_lir = prev_ratios["loan_interest_rate"] if prev_ratios else None
-                delta_lir = f"{(lir - prev_lir):+.2%}" if prev_lir is not None else None
-                st.metric("放款利息收入率（利息收入／放款總額）", f"{lir:.2%}", delta=delta_lir)
-                lv = rate_ratio(lir, "loan_interest_rate")
-                if lv == "green":
-                    st.success("✅ 放款收益率良好，資金運用效率佳。")
-                elif lv == "yellow":
-                    st.warning("⚠️ 放款收益率偏低（1–3%），可評估是否調整放款結構或利率定價。")
-                else:
-                    st.error("🚨 放款收益率過低（< 1%），資金運用效率不佳，建議檢視放款策略。")
-
-                st.divider()
-
                 # ── 科目異常建議 ──────────────────────────
                 st.markdown("#### 🔍 科目異常建議")
                 if prev_agg is None or prev_agg.empty:
                     st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
                 else:
+                    curr_months = diag_df[diag_df["年度"] == selected_year]["年月"].nunique()
+                    prev_months = diag_df[diag_df["年度"] == prev_year]["年月"].nunique()
+                    if curr_months < prev_months:
+                        st.warning(f"⚠️ {selected_year}年僅有 {curr_months} 個月資料，{prev_year}年有 {prev_months} 個月，損益科目對比可能不公允。")
                     with st.spinner("分析科目變動..."):
                         render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
 
