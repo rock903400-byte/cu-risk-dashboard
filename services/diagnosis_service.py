@@ -7,6 +7,7 @@ THRESHOLDS = {
     "debt_ratio":    {"green": 0.80, "red": 0.90},
     "equity_ratio":  {"green": 0.20, "red": 0.10},
     "expense_ratio": {"green": 0.95, "red": 1.05},
+    "avg_rate":      {"green": 0.03, "red": 0.02},
 }
 
 _YOY_RULES = [
@@ -26,6 +27,8 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
     total_equity  = annual_agg[codes.str.startswith("3")]["當月金額"].sum()
     total_income  = annual_agg[codes.str.startswith("4")]["當月金額"].sum()
     total_expense = annual_agg[codes.str.startswith("5")]["當月金額"].sum()
+    interest_income = annual_agg[codes.str.startswith("4101")]["當月金額"].sum()
+    loan_balance = annual_agg[codes.str.startswith("131")]["當月金額"].sum()
     return {
         "debt_ratio":    safe_div(total_liabs, total_assets),
         "equity_ratio":  safe_div(total_equity, total_assets),
@@ -34,6 +37,7 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
         "total_assets":  total_assets,
         "total_income":  total_income,
         "total_expense": total_expense,
+        "avg_rate":      safe_div(interest_income, loan_balance),
     }
 
 
@@ -43,6 +47,10 @@ def rate_ratio(value: float, key: str) -> str:
         if value <= t["red"]:  return "red"
         if value < t["green"]: return "yellow"
         return "green"
+    elif key == "avg_rate":
+        if value >= t["green"]: return "green"
+        if value >= t["red"]:   return "yellow"
+        return "red"
     else:
         if value >= t["red"]:   return "red"
         if value >= t["green"]: return "yellow"
@@ -85,9 +93,8 @@ def calc_trend(analysis_df: pd.DataFrame, all_years: list) -> pd.DataFrame:
         r = calc_ratios(agg)
         rows.append({
             "年度":  yr,
-            "負債比": r["debt_ratio"],
-            "淨值比": r["equity_ratio"],
             "開支比": r["expense_ratio"],
+            "加權平均利率": r["avg_rate"],
             "損益":   r["net_income"],
         })
     return pd.DataFrame(rows) if rows else pd.DataFrame()

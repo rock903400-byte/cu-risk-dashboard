@@ -457,14 +457,12 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
                     st.dataframe(
                         trend_df.style
-                        .map(lambda v: _cell_color(v, "debt_ratio"),    subset=["負債比"])
-                        .map(lambda v: _cell_color(v, "equity_ratio"),  subset=["淨值比"])
                         .map(lambda v: _cell_color(v, "expense_ratio"), subset=["開支比"])
+                        .map(lambda v: _cell_color(v, "avg_rate"),      subset=["加權平均利率"])
                         .map(_net_color,                                subset=["損益"])
                         .format({
-                            "負債比": "{:.1%}",
-                            "淨值比": "{:.1%}",
                             "開支比": "{:.1%}",
+                            "加權平均利率": "{:.2%}",
                             "損益":   lambda x: format_large_number(x),
                         })
                         .set_properties(**{"font-size": "16px", "text-align": "center"})
@@ -475,38 +473,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                     loss_years = trend_df[trend_df["開支比"] > 1.0]["年度"].tolist()
                     if len(loss_years) >= 2:
                         st.error(f"⚠️ 歷年中有 {len(loss_years)} 個年度開支比超過 100%（{', '.join(loss_years)}），請持續關注收支趨勢。")
-
-                    st.markdown("---")
-                    st.markdown("**📊 趨勢圖表**")
-                    import plotly.graph_objects as go
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(
-                        x=trend_df["年度"], y=trend_df["負債比"] * 100,
-                        mode="lines+markers", name="負債比",
-                        line=dict(color="#EF4444", width=3), marker=dict(size=8)
-                    ))
-                    fig.add_trace(go.Scatter(
-                        x=trend_df["年度"], y=trend_df["淨值比"] * 100,
-                        mode="lines+markers", name="淨值比",
-                        line=dict(color="#10B981", width=3), marker=dict(size=8)
-                    ))
-                    fig.add_trace(go.Scatter(
-                        x=trend_df["年度"], y=trend_df["開支比"] * 100,
-                        mode="lines+markers", name="開支比",
-                        line=dict(color="#3B82F6", width=3), marker=dict(size=8)
-                    ))
-                    fig.add_hline(y=90, line_dash="dash", line_color="#EF4444", opacity=0.5,
-                                  annotation_text="負債比警戒線 90%")
-                    fig.add_hline(y=100, line_dash="dash", line_color="#3B82F6", opacity=0.5,
-                                  annotation_text="開支比警戒線 100%")
-                    fig.update_layout(
-                        height=350,
-                        yaxis_title="百分比 (%)",
-                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                        margin=dict(l=50, r=20, t=20, b=50),
-                        font=dict(size=16),
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
 
     # ── 原始資料 ──────────────────────────────────────────
     with tab_raw:
