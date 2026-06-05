@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 
 
-def get_annual_snapshot(df: pd.DataFrame, year_str: str, max_months: int | None = None) -> pd.DataFrame:
+def get_annual_snapshot(df: pd.DataFrame, year_str: str, same_months: list[str] | None = None) -> pd.DataFrame:
     """
     取得指定年度的年化累計資料（資產負債取年底，損益取全年累計）
     
     Parameters:
         df: 原始資料
         year_str: 年度字串 (如 "113")
-        max_months: 損益科目最多取前 N 個月（用於年度對比時確保月數相同）
+        same_months: 損益科目只保留指定月份列表（用於年度對比時確保月份相同）
     """
     y_df = df[df["年度"] == year_str].copy()
     if y_df.empty:
@@ -18,10 +18,8 @@ def get_annual_snapshot(df: pd.DataFrame, year_str: str, max_months: int | None 
     bs = y_df[y_df["會計科目"].str.match(r"^[123]") & (y_df["年月"] == latest_m)]
     pl = y_df[y_df["會計科目"].str.match(r"^[45]")]
     
-    if max_months is not None:
-        months = sorted(pl["年月"].unique())
-        if len(months) > max_months:
-            pl = pl[pl["年月"].isin(months[:max_months])]
+    if same_months is not None:
+        pl = pl[pl["年月"].isin(same_months)]
     
     pl_sum = pl.groupby(["會計科目", "會科名稱"]).agg({"當月金額": "sum"}).reset_index()
     return pd.concat([bs[["會計科目", "會科名稱", "當月金額"]], pl_sum])

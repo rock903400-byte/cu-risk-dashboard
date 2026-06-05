@@ -46,6 +46,22 @@ class TestGetAnnualSnapshot:
         result = get_annual_snapshot(_make_analysis_df(), "999")
         assert result.empty
 
+    def test_same_months_filters_pl_only(self):
+        """same_months 應只保留指定月份的損益科目，資產負債不受影響"""
+        df = _make_analysis_df()
+        result = get_annual_snapshot(df, "112", same_months=["11201", "11202", "11203"])
+        income = result[result["會計科目"] == "4101"]["當月金額"].iloc[0]
+        assert income == pytest.approx(500 * 3)
+        asset = result[result["會計科目"] == "1101"]["當月金額"].iloc[0]
+        assert asset == pytest.approx(10000 + 12 * 100)
+
+    def test_same_months_non_contiguous(self):
+        """same_months 可處理非連續月份（如 5-8 月）"""
+        df = _make_analysis_df()
+        result = get_annual_snapshot(df, "112", same_months=["11205", "11206", "11207", "11208"])
+        income = result[result["會計科目"] == "4101"]["當月金額"].iloc[0]
+        assert income == pytest.approx(500 * 4)
+
 
 class TestCalcYoyPct:
     def test_positive_growth(self):

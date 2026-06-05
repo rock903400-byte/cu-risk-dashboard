@@ -166,13 +166,13 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 curr_idx = all_years.index(selected_year)
                 prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
                 if prev_year:
-                    curr_months = is_df[is_df["年度"] == selected_year]["年月"].nunique()
-                    prev_months = is_df[is_df["年度"] == prev_year]["年月"].nunique()
-                    prev_is_annual = get_annual_snapshot(is_df, prev_year, max_months=curr_months)
+                    curr_months_list = sorted(is_df[is_df["年度"] == selected_year]["年月"].unique())
+                    prev_months_list = sorted(is_df[is_df["年度"] == prev_year]["年月"].unique())
+                    prev_is_annual = get_annual_snapshot(is_df, prev_year, same_months=curr_months_list)
                     prev_is_annual = prev_is_annual[prev_is_annual["會計科目"].astype(str).str.match(r"^[45]")].copy()
                     prev_is_annual["類別"] = prev_is_annual["會計科目"].apply(classify_code)
-                    if curr_months < prev_months:
-                        st.info(f"ℹ️ {selected_year}年僅有 {curr_months} 個月資料，已自動取{prev_year}年前 {curr_months} 個月進行公平對比。")
+                    if len(curr_months_list) < len(prev_months_list):
+                        st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
                 else:
                     st.info("無前期年度可對比。")
 
@@ -327,17 +327,17 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
             curr_idx  = all_years.index(selected_year)
             prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
-            curr_months = analysis_df[analysis_df["年度"] == selected_year]["年月"].nunique()
-            prev_agg  = get_annual_snapshot(analysis_df, prev_year, max_months=curr_months) if prev_year else None
+            curr_months_list = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
+            prev_agg  = get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list) if prev_year else None
 
             st.markdown(f"#### 【 {selected_year} 年度會計科目變動偵測 (YoY) 與科目排名 】")
             col_left, col_right = st.columns([4, 6])
 
             with col_left:
                 if prev_year and prev_agg is not None and not prev_agg.empty:
-                    prev_months = analysis_df[analysis_df["年度"] == prev_year]["年月"].nunique()
-                    if curr_months < prev_months:
-                        st.info(f"ℹ️ {selected_year}年僅有 {curr_months} 個月資料，已自動取{prev_year}年前 {curr_months} 個月進行公平對比。")
+                    prev_months_list = sorted(analysis_df[analysis_df["年度"] == prev_year]["年月"].unique())
+                    if len(curr_months_list) < len(prev_months_list):
+                        st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
                     with st.spinner("偵測年度變動..."):
                         render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
                 else:
@@ -379,8 +379,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
             curr_idx  = all_years.index(selected_year)
             prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
-            curr_months = diag_df[diag_df["年度"] == selected_year]["年月"].nunique()
-            prev_agg  = get_annual_snapshot(diag_df, prev_year, max_months=curr_months) if prev_year else None
+            curr_months_list = sorted(diag_df[diag_df["年度"] == selected_year]["年月"].unique())
+            prev_agg  = get_annual_snapshot(diag_df, prev_year, same_months=curr_months_list) if prev_year else None
 
             if annual_agg.empty:
                 st.warning("本年度無資料。")
@@ -449,19 +449,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         st.error("🚨 本年度虧損，建議檢視主要支出項目，評估增收節支方案。")
                     else:
                         st.success("✅ 本年度盈餘，獲利能力正常。")
-
-                st.divider()
-
-                # ── 科目異常建議 ──────────────────────────
-                st.markdown("#### 🔍 科目異常建議")
-                if prev_agg is None or prev_agg.empty:
-                    st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
-                else:
-                    prev_months = diag_df[diag_df["年度"] == prev_year]["年月"].nunique()
-                    if curr_months < prev_months:
-                        st.info(f"ℹ️ {selected_year}年僅有 {curr_months} 個月資料，已自動取{prev_year}年前 {curr_months} 個月進行公平對比。")
-                    with st.spinner("分析科目變動..."):
-                        render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
 
                 st.divider()
 
