@@ -103,6 +103,8 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] > div {{ font-size: 1.1rem !important; font-weight: 600 !important; word-break: break-word !important; white-space: normal !important; text-overflow: clip !important; overflow: visible !important; }}
 [data-testid="metric-container"] {{ overflow: visible !important; }}
 [data-testid="stDataFrame"] {{ font-size: 18px !important; }}
+[data-testid="stDataFrame"] td {{ font-size: 18px !important; padding: 10px 8px !important; }}
+[data-testid="stDataFrame"] th {{ font-size: 18px !important; padding: 10px 8px !important; }}
 @media (max-width: 640px) {{
     html, body, [data-testid="stAppViewContainer"] {{ font-size: 18px !important; }}
     [data-testid="stMainBlockContainer"] {{
@@ -115,10 +117,13 @@ html, body, [data-testid="stAppViewContainer"] {{
     .stButton > button {{ min-height: 56px !important; font-size: 18px !important; }}
     [data-baseweb="select"] {{ min-height: 56px !important; font-size: 18px !important; }}
     .stTabs [data-baseweb="tab"] {{ font-size: 16px !important; padding: 12px 16px !important; }}
-    .card-criteria {{ font-size: 1rem !important; padding: 8px 12px !important; }}
-    .reason-text {{ font-size: 1rem !important; }}
+    .card-criteria {{ font-size: 1.1rem !important; padding: 10px 14px !important; }}
+    .reason-text {{ font-size: 1.1rem !important; }}
     .name-tag {{ font-size: 1.1rem !important; padding: 6px 14px !important; }}
     [data-testid="stDataFrame"] {{ font-size: 18px !important; }}
+    [data-testid="stCheckboxContainer"] {{ min-height: 56px !important; }}
+    [data-testid="stExpander"] summary {{ min-height: 56px !important; padding: 14px 16px !important; }}
+    .stDownloadButton > button {{ min-height: 56px !important; }}
 }}
 [data-testid="stSidebar"] {{ background-color: #1E293B !important; min-width: 280px !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
@@ -131,6 +136,9 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stSidebar"] .stButton > button:hover {{
     background: #475569; border-color: #64748B; transform: translateY(-1px);
 }}
+[data-testid="stSidebar"] [data-baseweb="select"] {{ min-height: 52px !important; font-size: 18px !important; }}
+[data-testid="stSidebar"] .stCheckboxContainer {{ min-height: 52px !important; }}
+[data-testid="stSidebar"] .stCheckboxContainer label {{ font-size: 18px !important; }}
 .stCodeBlock {{ border-radius: 10px !important; background: #0F172A !important; border: 1px solid #334155 !important; }}
 [data-testid="stVerticalBlockBorderWrapper"] {{
     border-radius: 20px !important; background: white !important;
@@ -151,12 +159,12 @@ html, body, [data-testid="stAppViewContainer"] {{
     font-size: 1.1rem; border: 1px solid #CBD5E1; font-weight: 600;
 }}
 .card-criteria {{
-    font-size: 0.95rem; color: #475569; background: #F8FAFC;
-    border-bottom: 1px solid #E2E8F0; padding: 6px 12px; line-height: 1.5;
+    font-size: 1.1rem; color: #475569; background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0; padding: 8px 14px; line-height: 1.6;
 }}
 .union-item {{ margin: 4px 0; }}
 .reason-text {{
-    font-size: 0.95rem; color: #92400E; padding: 1px 4px 4px 14px;
+    font-size: 1.1rem; color: #92400E; padding: 2px 4px 4px 14px;
 }}
 .badge-admin  {{ background: #DCFCE7; color: #166534 !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; border: 1px solid #86EFAC; margin-bottom: 1rem; }}
 .badge-viewer {{ background: #FEF3C7; color: #92400E !important; border-radius: 8px; padding: 10px; text-align: center; font-size: 1.1rem; font-weight: 700; border: 1px solid #FCD34D; margin-bottom: 1rem; }}
@@ -164,5 +172,14 @@ html, body, [data-testid="stAppViewContainer"] {{
 .alert-box   {{ padding: 15px; border-radius: 10px; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600; border: 1px solid transparent; }}
 .alert-error   {{ background-color: #FEF2F2; color: #991B1B; border-color: #FEE2E2; }}
 .alert-warning {{ background-color: #FFFBEB; color: #92400E; border-color: #FEF3C7; }}
+[data-testid="stCaption"], .stCaption {{ font-size: 1rem !important; color: #475569 !important; }}
+.stAlert {{ font-size: 1.1rem !important; }}
+.stAlert p {{ font-size: 1.1rem !important; }}
+[data-testid="stCheckboxContainer"] {{ min-height: 48px !important; }}
+[data-testid="stCheckboxContainer"] label {{ font-size: 1.1rem !important; }}
+[data-testid="stExpander"] {{ min-height: 48px !important; }}
+[data-testid="stExpander"] summary {{ font-size: 1.1rem !important; padding: 12px 16px !important; min-height: 48px !important; }}
+[data-baseweb="tag"] {{ font-size: 1rem !important; padding: 4px 10px !important; }}
+.stDownloadButton > button {{ min-height: 52px !important; font-size: 18px !important; }}
 </style>
 """

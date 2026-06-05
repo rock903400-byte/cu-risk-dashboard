@@ -40,7 +40,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
     # ── 資產負債表 ────────────────────────────────────────
     with tab_bs:
-        st.subheader("📋 資產負債表 (Balance Sheet)")
+        st.subheader("📋 資產負債表")
         if filtered.empty:
             st.warning("請選擇月份。")
         else:
@@ -143,7 +143,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
     # ── 綜合損益表 ────────────────────────────────────────
     with tab_is:
-        st.subheader("📊 年度綜合損益表 (Annual Income Statement)")
+        st.subheader("📊 年度綜合損益表")
         if not selected_year:
             st.warning("無資料可供展示。")
         else:
@@ -286,7 +286,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
     # ── 年度概覽 ──────────────────────────────────────────
     with tab_overview:
-        st.subheader("📈 年度營運概覽 (Annual Overview)")
+        st.subheader("📈 年度營運概覽")
         if not selected_year:
             st.warning("無資料可供展示。")
         else:
@@ -312,7 +312,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
     # ── 深度分析 ──────────────────────────────────────────
     with tab_deep:
-        st.subheader("🔍 深度分析 (Deep Analysis)")
+        st.subheader("🔍 深度分析")
         if not selected_year:
             st.warning("無資料可供展示。")
         else:
@@ -357,7 +357,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
 
     # ── 財務診斷 ──────────────────────────────────────────
     with tab_diag:
-        st.subheader("🏥 財務診斷 (Financial Diagnosis)")
+        st.subheader("🏥 財務診斷")
         if not selected_year:
             st.warning("無資料可供診斷。")
         else:
