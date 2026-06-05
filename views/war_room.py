@@ -330,30 +330,28 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             curr_months_list = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
             prev_agg  = get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list) if prev_year else None
 
-            st.markdown(f"#### 【 {selected_year} 年度會計科目變動偵測 (YoY) 與科目排名 】")
-            col_left, col_right = st.columns([4, 6])
+            st.markdown(f"#### 📊 年度科目變動偵測")
+            if prev_year and prev_agg is not None and not prev_agg.empty:
+                prev_months_list = sorted(analysis_df[analysis_df["年度"] == prev_year]["年月"].unique())
+                if len(curr_months_list) < len(prev_months_list):
+                    st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
+                with st.spinner("偵測年度變動..."):
+                    render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
+            else:
+                st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
 
-            with col_left:
-                if prev_year and prev_agg is not None and not prev_agg.empty:
-                    prev_months_list = sorted(analysis_df[analysis_df["年度"] == prev_year]["年月"].unique())
-                    if len(curr_months_list) < len(prev_months_list):
-                        st.info(f"ℹ️ {selected_year}年僅有 {len(curr_months_list)} 個月資料，已自動取{prev_year}年同期 {len(curr_months_list)} 個月進行公平對比。")
-                    with st.spinner("偵測年度變動..."):
-                        render_yoy_anomalies(annual_agg, prev_agg, selected_year, prev_year)
-                else:
-                    st.info("這是系統紀錄的第一個年度，無前期資料可供比較。")
+            st.divider()
 
-            with col_right:
-                st.markdown("**關鍵科目金額排名（各類 Top 10）**")
-                if not annual_agg.empty:
-                    render_ranking_tabs(
-                        annual_agg, THEME,
-                        compare_agg=compare_agg,
-                        year_label=selected_year,
-                        compare_label=compare_year or "",
-                    )
-                else:
-                    st.info("本年度無排名資料。")
+            st.markdown(f"#### 🏆 關鍵科目金額排名（各類 Top 10）")
+            if not annual_agg.empty:
+                render_ranking_tabs(
+                    annual_agg, THEME,
+                    compare_agg=compare_agg,
+                    year_label=selected_year,
+                    compare_label=compare_year or "",
+                )
+            else:
+                st.info("本年度無排名資料。")
 
     # ── 財務診斷 ──────────────────────────────────────────
     with tab_diag:
