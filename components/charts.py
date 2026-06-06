@@ -66,7 +66,7 @@ def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str
 
 def render_yoy_anomalies(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame,
                           selected_year: str, prev_year: str):
-    """YoY 異常偵測：改善版顯示，移除紅色警示，增加摘要卡片"""
+    """YoY 異常偵測"""
     anomalies = detect_yoy_anomalies(annual_agg, prev_agg)
 
     if anomalies.empty:
@@ -82,52 +82,53 @@ def render_yoy_anomalies(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame,
             f"- 減少合計：**{format_large_number(total_decrease)}**\n"
             f"- 淨變動：**{format_large_number(abs(net_change))}** {'↑' if net_change > 0 else '↓'}")
 
-    display_df = anomalies.head(10).copy()
-    display_df["方向"] = display_df["變動金額"].apply(lambda x: "↑" if x > 0 else "↓")
-    display_df["變動說明"] = display_df.apply(
-        lambda r: f"{r['方向']} {format_large_number(abs(r['變動金額']))}（{r['變動率 (%)']:+.1f}%）",
-        axis=1
-    )
+    _GOOD_CATS = {"收入", "資產", "權益"}
 
-    result = display_df[["會計科目", "會科名稱", "當月金額_前", "當月金額_今"]].copy()
-    result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額"]
-    result["增減金額"] = display_df["變動金額"].values
-    result["增減率"] = display_df["變動率 (%)"].values
+    def _build_result(df: pd.DataFrame) -> pd.DataFrame:
+        r = df[["會計科目", "會科名稱", "當月金額_前", "當月金額_今"]].copy()
+        r.columns = ["科目代號", "科目名稱", "去年金額", "今年金額"]
+        r.insert(2, "類別", r["科目代號"].apply(classify_code))
+        r["增減金額"] = df["變動金額"].values
+        r["增減率"] = df["變動率 (%)"].values
+        return r
 
-    def color_diff(val):
-        if pd.isna(val):
-            return ""
-        return f"color: {'#EF4444' if val > 0 else '#10B981'}; font-weight: bold"
+    def _style_row(row):
+        styles = [""] * len(row)
+        cols = list(row.index)
+        inc_i = cols.index("增減金額")
+        rate_i = cols.index("增減率")
+        val = row["增減金額"]
+        if pd.isna(val) or val == 0:
+            return styles
+        good_up = row["類別"] in _GOOD_CATS
+        color = "#10B981" if (val > 0) == good_up else "#EF4444"
+        styles[inc_i] = f"color: {color}; font-weight: bold"
+        styles[rate_i] = f"color: {color}; font-weight: bold"
+        return styles
 
-    st.markdown(f"**變動前 10 大科目**")
+    _FMT = {
+        "去年金額": "{:,.0f}", "今年金額": "{:,.0f}",
+        "增減金額": "{:+,.0f}", "增減率": "{:+.1f}%",
+    }
+
+    st.markdown("**變動前 10 大科目**")
     st.dataframe(
-        result.style
-        .format({
-            "去年金額": "{:,.0f}", "今年金額": "{:,.0f}",
-            "增減金額": "{:+,.0f}", "增減率": "{:+.1f}%",
-        })
-        .map(color_diff, subset=["增減金額", "增減率"])
+        _build_result(anomalies.head(10)).style
+        .format(_FMT)
+        .apply(_style_row, axis=1)
         .set_properties(**{"font-size": "16px", "padding": "8px"}),
         use_container_width=True, hide_index=True,
     )
 
     if len(anomalies) > 10:
-        with st.expander(f"查看全部 {len(anomalies)} 個變動科目"):
-            full_display = anomalies.copy()
-            full_display["增減金額"] = full_display["變動金額"]
-            full_display["增減率"] = full_display["變動率 (%)"]
-            full_result = full_display[["會計科目", "會科名稱", "當月金額_前", "當月金額_今", "增減金額", "增減率"]].copy()
-            full_result.columns = ["科目代號", "科目名稱", "去年金額", "今年金額", "增減金額", "增減率"]
-            st.dataframe(
-                full_result.style
-                .format({
-                    "去年金額": "{:,.0f}", "今年金額": "{:,.0f}",
-                    "增減金額": "{:+,.0f}", "增減率": "{:+.1f}%",
-                })
-                .map(color_diff, subset=["增減金額", "增減率"])
-                .set_properties(**{"font-size": "16px", "padding": "8px"}),
-                use_container_width=True, hide_index=True,
-            )
+        st.markdown(f"**其餘 {len(anomalies) - 10} 個變動科目**")
+        st.dataframe(
+            _build_result(anomalies.iloc[10:]).style
+            .format(_FMT)
+            .apply(_style_row, axis=1)
+            .set_properties(**{"font-size": "16px", "padding": "8px"}),
+            use_container_width=True, hide_index=True,
+        )
 
 
 def render_ranking_tabs(annual_agg: pd.DataFrame, theme_bg: str,

@@ -95,7 +95,7 @@ def detect_yoy_anomalies(
 ) -> pd.DataFrame:
     """
     找出 YoY 異常科目（同時滿足：|變動金額| > threshold_amount 且 |變動率| > threshold_pct%）。
-    回傳排序後的 DataFrame（最多 10 筆），不含任何 st.* 呼叫。
+    回傳排序後的 DataFrame，不含任何 st.* 呼叫。
     """
     ann = annual_agg.groupby("會計科目", as_index=False).agg({"會科名稱": "first", "當月金額": "sum"})
     prv = prev_agg.groupby("會計科目", as_index=False).agg({"當月金額": "sum"})
@@ -118,6 +118,5 @@ def detect_yoy_anomalies(
             (comp["變動率 (%)"].abs() > threshold_pct)
         ]
         .sort_values("變動金額", key=abs, ascending=False)
-        .head(10)
         .reset_index(drop=True)
     )
