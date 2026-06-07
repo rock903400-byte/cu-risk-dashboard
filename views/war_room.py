@@ -163,8 +163,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             show_compare = st.checkbox("📊 對比去年", value=False, key="is_compare")
             prev_is_annual = pd.DataFrame()
             if show_compare:
-                curr_idx = all_years.index(selected_year)
-                prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+                curr_idx = all_years.index(selected_year) if selected_year in all_years else -1
+                prev_year = all_years[curr_idx + 1] if curr_idx >= 0 and curr_idx < len(all_years) - 1 else None
                 if prev_year:
                     curr_months_list = sorted(is_df[is_df["年度"] == selected_year]["年月"].unique())
                     prev_months_list = sorted(is_df[is_df["年度"] == prev_year]["年月"].unique())
@@ -293,8 +293,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             analysis_df = union_df[union_df["社名"] == selected_union].copy()
             annual_agg = get_annual_snapshot(analysis_df, selected_year)
 
-            curr_idx  = all_years.index(selected_year)
-            prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+            curr_idx  = all_years.index(selected_year) if selected_year in all_years else -1
+            prev_year = all_years[curr_idx + 1] if curr_idx >= 0 and curr_idx < len(all_years) - 1 else None
             prev_agg  = get_annual_snapshot(analysis_df, prev_year) if prev_year else None
 
             if not annual_agg.empty:
@@ -337,8 +337,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                     annual_agg = get_annual_snapshot(analysis_df, selected_year, same_months=_common_months)
                     compare_agg = get_annual_snapshot(analysis_df, compare_year, same_months=_common_months)
 
-            curr_idx  = all_years.index(selected_year)
-            prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+            curr_idx  = all_years.index(selected_year) if selected_year in all_years else -1
+            prev_year = all_years[curr_idx + 1] if curr_idx >= 0 and curr_idx < len(all_years) - 1 else None
             curr_months_list = sorted(analysis_df[analysis_df["年度"] == selected_year]["年月"].unique())
             prev_agg  = get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list) if prev_year else None
             yoy_annual_agg = get_annual_snapshot(analysis_df, selected_year, same_months=curr_months_list) if prev_year else annual_agg
@@ -375,8 +375,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             diag_df = union_df[union_df["社名"] == selected_union].copy()
             annual_agg = get_annual_snapshot(diag_df, selected_year)
 
-            curr_idx  = all_years.index(selected_year)
-            prev_year = all_years[curr_idx + 1] if curr_idx < len(all_years) - 1 else None
+            curr_idx  = all_years.index(selected_year) if selected_year in all_years else -1
+            prev_year = all_years[curr_idx + 1] if curr_idx >= 0 and curr_idx < len(all_years) - 1 else None
             curr_months_list = sorted(diag_df[diag_df["年度"] == selected_year]["年月"].unique())
             prev_agg  = get_annual_snapshot(diag_df, prev_year, same_months=curr_months_list) if prev_year else None
 

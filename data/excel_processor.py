@@ -56,15 +56,21 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     df_l_raw["開支比"]  = df_l_raw["開支比"].apply(lambda x: x / 100 if abs(x) > 5.0 else x)
 
     # 提撥率：update_database.py 下載時已將 HTML 的 % 值 ÷100，直接讀入即可
-    df_l_raw["提撥率"]  = pd.to_numeric(df_l_raw.get("提撥率", 0), errors="coerce").fillna(0)
+    if "提撥率" in df_l_raw.columns:
+        df_l_raw["提撥率"] = pd.to_numeric(df_l_raw["提撥率"], errors="coerce").fillna(0)
+    else:
+        df_l_raw["提撥率"] = 0.0
 
     df_m = df_m_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
     df_l = df_l_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
 
     max_d   = df_m["年月"].max()
+    min_d   = df_m["年月"].min()
     dec_dates = df_m[df_m["年月"].dt.month == 12]["年月"]
     T0 = dec_dates.max() if not dec_dates.empty else max_d
-    T1, T2, T3 = (T0 - pd.DateOffset(years=i) for i in range(1, 4))
+    T1 = max(T0 - pd.DateOffset(years=1), min_d)
+    T2 = max(T0 - pd.DateOffset(years=2), min_d)
+    T3 = max(T0 - pd.DateOffset(years=3), min_d)
     T_12M = max_d - pd.DateOffset(months=12)
 
     rows = []
@@ -110,7 +116,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
             "現有股金": curr_S,
             "股金成長率(12M)": shrG_curr,
             "貸放比": curr_eLoan,
-            "儲蓄率": float(ms.iloc[-1]["儲蓄率"]),
+            "儲蓄率": _get_value(ms, "儲蓄率", T0),
             "逾放比(12M)": eOvd_12m,
             "逾放比": curr_eOvd,
             "開支比": curr_R,

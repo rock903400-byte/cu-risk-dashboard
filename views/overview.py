@@ -38,14 +38,22 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         avg_label = "區域平均" if region_data is not None else "全台平均"
 
         # 開支比 / 逾放比 YoY（方向性著色：inverse）
-        max_d = df_l["年月"].max()
-        T_12M = max_d - pd.DateOffset(months=12)
-        prev_逾放比_avg = df_l[df_l["年月"] == T_12M]["逾放比"].mean()
-        T0_dec = df_l[df_l["年月"].dt.month == 12]["年月"].max()
-        T1_dec = T0_dec - pd.DateOffset(years=1) if pd.notna(T0_dec) else None
-        prev_開支比_avg = (
-            df_l[df_l["年月"] == T1_dec]["開支比"].mean() if T1_dec is not None else float("nan")
-        )
+        if df_l.empty:
+            max_d = pd.NaT
+            T_12M = pd.NaT
+            prev_逾放比_avg = float("nan")
+            T0_dec = pd.NaT
+            T1_dec = None
+            prev_開支比_avg = float("nan")
+        else:
+            max_d = df_l["年月"].max()
+            T_12M = max_d - pd.DateOffset(months=12)
+            prev_逾放比_avg = df_l[df_l["年月"] == T_12M]["逾放比"].mean()
+            T0_dec = df_l[df_l["年月"].dt.month == 12]["年月"].max()
+            T1_dec = T0_dec - pd.DateOffset(years=1) if pd.notna(T0_dec) else None
+            prev_開支比_avg = (
+                df_l[df_l["年月"] == T1_dec]["開支比"].mean() if T1_dec is not None else float("nan")
+            )
         curr_開支比_avg = avg_src["開支比(年)"].mean()
         curr_逾放比_avg = avg_src["逾放比"].mean()
 
