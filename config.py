@@ -1,8 +1,16 @@
 """
 全域配置與常數
 """
+import sys
+from pathlib import Path
+_root = str(Path(__file__).resolve().parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
+
 import streamlit as st
 from pydantic import BaseModel, field_validator
+
+from common.thresholds import DEFAULT_THRESHOLDS, load_thresholds
 
 
 class ThresholdsConfig(BaseModel):
@@ -38,7 +46,6 @@ ACCOUNT_CODES = {
 }
 
 def safe_secrets():
-    """Return st.secrets as a dict-like, or empty dict if no secrets file."""
     try:
         return st.secrets
     except Exception:
@@ -47,13 +54,6 @@ def safe_secrets():
 
 def get_config():
     _secrets = safe_secrets()
-    _thr = _secrets.get("thresholds", {})
-    _thr_defaults = {
-        "high_risk_ovd": 0.1, "liquidity_loan": 0.9, "idle_loan": 0.3,
-        "stable_loan_min": 0.4, "stable_loan_max": 0.8, "ovd_safe_line": 0.02,
-        "high_risk_income_ratio": 1.0, "high_risk_loan_ratio": 0.1, "high_risk_ovd_ratio": 0.5,
-        "savings_good": 0.6, "provision_good": 0.01,
-    }
     raw = {
         "BUCKET_NAME":  _secrets.get("BUCKET_NAME", "excel-reports"),
         "APP_BASE_URL": "https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app",
@@ -64,9 +64,9 @@ def get_config():
             "LOAN":   "放款及逾期放款",
             "REGION": "區域分類表",
         },
-        "THRESHOLDS": {k: _thr.get(k, d) for k, d in _thr_defaults.items()},
+        "THRESHOLDS": load_thresholds(_secrets),
     }
-    ThresholdsConfig(**raw["THRESHOLDS"])  # 型別與正數校驗
+    ThresholdsConfig(**raw["THRESHOLDS"])
     return raw
 APP_CSS = """
 <style>

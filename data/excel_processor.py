@@ -1,17 +1,17 @@
+import sys
+from pathlib import Path
+_root = str(Path(__file__).resolve().parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
+
 import io
 import pandas as pd
 import streamlit as st
 
-from data.utils import safe_div, convert_minguo_date
-from data.classifier import classify
-
-
-def _get_value(df: pd.DataFrame, col: str, d) -> float:
-    """取得 df 中 年月 <= d 的最後一筆 col 值；無匹配時取第一筆；df 為空時回傳 0.0"""
-    if df.empty:
-        return 0.0
-    sub = df[df["年月"] <= d]
-    return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
+from common.dates import convert_minguo_date, get_value as _get_value
+from common.utils import safe_div
+from common.classifier import classify
+from common.cleaning import defensive_clean_series
 
 
 _CACHE_VER = "v3"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
@@ -43,19 +43,14 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     for col in ["社員數", "股金", "貸放比"]:
         df_m_raw[col] = pd.to_numeric(df_m_raw[col], errors="coerce").fillna(0)
     
-    # 儲蓄率防禦性讀取：大於 1.0 視為原始百分比（如 85.4%），自動除以 100
-    df_m_raw["儲蓄率"] = pd.to_numeric(df_m_raw["儲蓄率"], errors="coerce").fillna(0)
-    df_m_raw["儲蓄率"] = df_m_raw["儲蓄率"].apply(lambda x: x / 100 if abs(x) > 1.0 else x)
-
+    df_m_raw["儲蓄率"] = defensive_clean_series(
+        pd.to_numeric(df_m_raw["儲蓄率"], errors="coerce").fillna(0), "儲蓄率"
+    )
     df_l_raw["逾放比"]  = pd.to_numeric(df_l_raw["逾放比"],  errors="coerce").fillna(0)
     df_l_raw["逾期貸款"] = pd.to_numeric(df_l_raw["逾期貸款"], errors="coerce").fillna(0)
-    
-    # 開支比防禦性讀取：收支比容許大於 100% (1.0)，因此若已清洗為小數 (e.g. 1.6661)，不應再除以 100
-    # 只有當數值大於 5.0 (500%) 時，才視為尚未清洗的百分比格式 (e.g. 166.61)
-    df_l_raw["開支比"]  = pd.to_numeric(df_l_raw["開支比"],  errors="coerce").fillna(0)
-    df_l_raw["開支比"]  = df_l_raw["開支比"].apply(lambda x: x / 100 if abs(x) > 5.0 else x)
-
-    # 提撥率：update_database.py 下載時已將 HTML 的 % 值 ÷100，直接讀入即可
+    df_l_raw["開支比"]  = defensive_clean_series(
+        pd.to_numeric(df_l_raw["開支比"], errors="coerce").fillna(0), "開支比"
+    )
     if "提撥率" in df_l_raw.columns:
         df_l_raw["提撥率"] = pd.to_numeric(df_l_raw["提撥率"], errors="coerce").fillna(0)
     else:

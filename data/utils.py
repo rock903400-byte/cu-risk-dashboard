@@ -1,27 +1,8 @@
-import pandas as pd
+import sys
+from pathlib import Path
+_root = str(Path(__file__).resolve().parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
-
-def safe_div(n, d):
-    return n / d if d and not pd.isna(d) else 0.0
-
-
-def format_large_number(n):
-    """將大額數字轉為 億 或 萬 單位，縮短顯示長度"""
-    if abs(n) >= 1e8:
-        return f"{n/1e8:.2f} 億元"
-    elif abs(n) >= 1e4:
-        return f"{n/1e4:.0f} 萬元"
-    else:
-        return f"{n:,.0f} 元"
-
-
-def convert_minguo_date(val):
-    try:
-        s = str(int(val)).strip()
-        if len(s) == 5:
-            y, m = int(s[:3]) + 1911, int(s[3:])
-        else:
-            y, m = int(s[:2]) + 1911, int(s[2:])
-        return pd.to_datetime(f"{y}-{m:02d}-01")
-    except Exception:
-        return pd.NaT
+from common.utils import safe_div, format_large_number  # noqa: F401, E402
+from common.dates import convert_minguo_date  # noqa: F401, E402
