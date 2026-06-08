@@ -15,11 +15,14 @@ class ThresholdsConfig(BaseModel):
     high_risk_income_ratio: float
     high_risk_loan_ratio:   float
     high_risk_ovd_ratio:    float
+    savings_good:           float
+    provision_good:         float
 
     @field_validator(
         "high_risk_ovd", "liquidity_loan", "idle_loan",
         "stable_loan_min", "stable_loan_max", "ovd_safe_line",
         "high_risk_income_ratio", "high_risk_loan_ratio", "high_risk_ovd_ratio",
+        "savings_good", "provision_good",
     )
     @classmethod
     def must_be_positive(cls, v: float) -> float:
@@ -49,6 +52,7 @@ def get_config():
         "high_risk_ovd": 0.1, "liquidity_loan": 0.9, "idle_loan": 0.3,
         "stable_loan_min": 0.4, "stable_loan_max": 0.8, "ovd_safe_line": 0.02,
         "high_risk_income_ratio": 1.0, "high_risk_loan_ratio": 0.1, "high_risk_ovd_ratio": 0.5,
+        "savings_good": 0.6, "provision_good": 0.01,
     }
     raw = {
         "BUCKET_NAME":  _secrets.get("BUCKET_NAME", "excel-reports"),
