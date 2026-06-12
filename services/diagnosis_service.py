@@ -10,6 +10,35 @@ THRESHOLDS = {
     "avg_rate":      {"green": 0.03, "red": 0.02},
 }
 
+
+def calc_lending_rate_monthly_avg(df: pd.DataFrame, year: str) -> float | None:
+    """年化放款利率：410x 利息收入年總和 / 131x 放款餘額月均值"""
+    y_df = df[df["年度"] == year].copy()
+    if y_df.empty:
+        return None
+
+    # 年月 已是 datetime (Gregorian)，直接用 dt.to_period('M') 分組
+    y_df["年月_period"] = y_df["年月"].dt.to_period("M")
+
+    int_inc = (
+        y_df[y_df["會計科目"].astype(str).str.startswith("410")]
+        .groupby("年月_period")["當月金額"]
+        .sum()
+        .sum()
+    )
+    loan_bal = (
+        y_df[y_df["會計科目"].astype(str).str.startswith("131")]
+        .groupby("年月_period")["當月金額"]
+        .sum()
+        .mean()
+    )
+
+    if loan_bal == 0 or pd.isna(loan_bal):
+        return None
+
+    rate = safe_div(int_inc, loan_bal)
+    return rate
+
 _YOY_RULES = [
     (["利息支出"],               "increase", "建議檢視現有借款利率，評估是否有再融資機會以降低資金成本。"),
     (["薪資", "人事", "用人費"], "increase", "建議審視人事配置與薪資結構，評估效率提升空間。"),
@@ -91,10 +120,11 @@ def calc_trend(analysis_df: pd.DataFrame, all_years: list) -> pd.DataFrame:
         if agg.empty:
             continue
         r = calc_ratios(agg)
+        lending_rate = calc_lending_rate_monthly_avg(analysis_df, yr)
         rows.append({
             "年度":  yr,
             "開支比": r["expense_ratio"],
-            "加權平均利率": r["avg_rate"],
+            "加權平均利率": lending_rate,
             "損益":   r["net_income"],
         })
     return pd.DataFrame(rows) if rows else pd.DataFrame()
