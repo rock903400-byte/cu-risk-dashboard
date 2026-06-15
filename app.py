@@ -288,7 +288,11 @@ with st.sidebar:
 
 # ── 頁面路由 ──────────────────────────────────────────────
 if st.session_state["nav_selection"] == "📊 社務診斷":
-    render_overview_page(data, df_m, df_l, region_data, CONFIG)
+    render_overview_page(
+        data, df_m, df_l, region_data, CONFIG,
+        assigned_union=st.session_state.get("assigned_union"),
+        is_district_office=st.session_state.get("is_district_office", False)
+    )
 
 elif st.session_state["nav_selection"] == "⚖️ 財報明細":
     render_war_room_page(df_csv, IS_ADMIN, CONFIG)

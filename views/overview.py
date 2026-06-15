@@ -15,7 +15,8 @@ _DOWNLOAD_CONFIG = {
 
 
 def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFrame,
-                         region_data: pd.DataFrame | None, config: dict):
+                         region_data: pd.DataFrame | None, config: dict,
+                         assigned_union: str | None = None, is_district_office: bool = False):
     THEME = config["THEME_BG"]
     T = config["THRESHOLDS"]
 
@@ -29,13 +30,20 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
     # ── 經營總覽 ──────────────────────────────────────────
     with tab_ov:
         c1, c2, c3, c4 = st.columns(4)
-        total_mem = data["現有社員"].sum()
-        total_shr = data["現有股金"].sum()
-        prev_mem  = data["_sM"].sum()
-        prev_shr  = data["_sS"].sum()
 
-        avg_src   = region_data if region_data is not None else data
-        avg_label = "區域平均" if region_data is not None else "全台平均"
+        is_individual = assigned_union and not is_district_office
+
+        if is_individual:
+            avg_src = data
+            avg_label = "本社"
+        else:
+            avg_src = region_data if region_data is not None else data
+            avg_label = "區域平均" if region_data is not None else "全台平均"
+
+        total_mem = avg_src["現有社員"].sum()
+        total_shr = avg_src["現有股金"].sum()
+        prev_mem  = avg_src["_sM"].sum()
+        prev_shr  = avg_src["_sS"].sum()
 
         # 開支比 / 逾放比 YoY（方向性著色：inverse）
         if df_l.empty:
@@ -64,18 +72,18 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
 
         c1.metric("社員總數（人）",  f"{int(total_mem):,}",
                   f"{safe_div(total_mem - prev_mem, prev_mem):.2%}",
-                  help="▲ 綠代表社員成長")
+                  delta_color="inverse",
+                  help="▲ 紅代表社員成長")
         c2.metric("股金總額",  format_large_number(total_shr),
                   f"{safe_div(total_shr - prev_shr, prev_shr):.2%}",
-                  help="▲ 綠代表股金成長")
+                  delta_color="inverse",
+                  help="▲ 紅代表股金成長")
         c3.metric(f"{avg_label}開支比", f"{curr_開支比_avg:.2%}",
                   _yoy_str(curr_開支比_avg, prev_開支比_avg),
-                  delta_color="inverse",
-                  help="▲ 紅代表開支比惡化（越低越好）")
+                  help="▲ 綠代表開支比惡化（越低越好）")
         c4.metric(f"{avg_label}逾放比", f"{curr_逾放比_avg:.2%}",
                   _yoy_str(curr_逾放比_avg, prev_逾放比_avg),
-                  delta_color="inverse",
-                  help="▲ 紅代表逾放比惡化（越低越好）")
+                  help="▲ 綠代表逾放比惡化（越低越好）")
 
         st.markdown("### 狀態雷達監控")
 

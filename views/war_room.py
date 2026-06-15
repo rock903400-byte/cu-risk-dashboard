@@ -393,8 +393,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 with col1:
                     dr = ratios["debt_ratio"]
                     delta_dr = f"{(dr - prev_ratios['debt_ratio']):+.1%}" if prev_ratios else None
-                    st.metric("負債比（總負債／總資產）", f"{dr:.1%}", delta=delta_dr,
-                              delta_color="inverse")
+                    st.metric("負債比（總負債／總資產）", f"{dr:.1%}", delta=delta_dr)
                     lv = rate_ratio(dr, "debt_ratio")
                     if lv == "green":
                         st.success("✅ 負債比正常，財務結構穩健。")
@@ -406,7 +405,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 with col2:
                     er = ratios["equity_ratio"]
                     delta_er = f"{(er - prev_ratios['equity_ratio']):+.1%}" if prev_ratios else None
-                    st.metric("淨值比（淨值／總資產）", f"{er:.1%}", delta=delta_er)
+                    st.metric("淨值比（淨值／總資產）", f"{er:.1%}", delta=delta_er,
+                              delta_color="inverse")
                     lv = rate_ratio(er, "equity_ratio")
                     if lv == "green":
                         st.success("✅ 自有資金充足，資本適足性良好。")
@@ -424,8 +424,7 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 with col3:
                     xr = ratios["expense_ratio"]
                     delta_xr = f"{(xr - prev_ratios['expense_ratio']):+.1%}" if prev_ratios else None
-                    st.metric("開支比（總支出／總收入）", f"{xr:.1%}", delta=delta_xr,
-                              delta_color="inverse")
+                    st.metric("開支比（總支出／總收入）", f"{xr:.1%}", delta=delta_xr)
                     lv = rate_ratio(xr, "expense_ratio")
                     if lv == "green":
                         st.success("✅ 開支比正常，收支控制良好。")
@@ -438,7 +437,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                     net = ratios["net_income"]
                     prev_net = prev_ratios["net_income"] if prev_ratios else None
                     delta_net = format_large_number(net - prev_net) if prev_net is not None else None
-                    st.metric("本期損益", format_large_number(net), delta=delta_net)
+                    st.metric("本期損益", format_large_number(net), delta=delta_net,
+                              delta_color="inverse")
                     consecutive_loss = (prev_ratios is not None and net < 0
                                         and prev_ratios["net_income"] < 0)
                     if consecutive_loss:
