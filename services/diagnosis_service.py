@@ -17,8 +17,12 @@ def calc_lending_rate_monthly_avg(df: pd.DataFrame, year: str) -> float | None:
     if y_df.empty:
         return None
 
-    # 年月 已是 datetime (Gregorian)，直接用 dt.to_period('M') 分組
-    y_df["年月_period"] = y_df["年月"].dt.to_period("M")
+    # 年月 可能是字串 (YYYYMM)，需先轉 datetime
+    y_df["年月_dt"] = pd.to_datetime(y_df["年月"], format="%Y%m", errors="coerce")
+    y_df = y_df.dropna(subset=["年月_dt"])
+    if y_df.empty:
+        return None
+    y_df["年月_period"] = y_df["年月_dt"].dt.to_period("M")
 
     int_inc = (
         y_df[y_df["會計科目"].astype(str).str.startswith("410")]
