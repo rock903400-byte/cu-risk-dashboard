@@ -44,6 +44,14 @@ app.py
 
 ---
 
+## 關鍵行為變更（近期）
+
+- **個社模式經營總覽**：四個指標（社員總數、股金總額、開支比、逾放比）改顯示該社自己的數值，標籤顯示「本社」；區會/管理員維持區域/全台平均
+- **股市紅綠燈邏輯**：全站 metric 紅漲=好、綠跌=壞（社員成長、股金增、收入增、淨利增、淨值比增）；綠漲=壞、紅跌=好（開支比升、逾放比升、負債比升、支出增）
+- **風險燈號顏色維持不變**：特別關懷=紅、穩健=綠、趨勢表風險著色
+
+---
+
 ## 部署
 
 1. 改 `deploy/` 內檔案 → `git add` → `git commit` → `git push main`
@@ -55,11 +63,12 @@ Secrets 在 Streamlit Cloud Dashboard 設定，模板見 `.streamlit/secrets_tem
 
 ---
 
-## 測試（62 個 pytest）
+## 測試（66 個 pytest）
 
 - `tests/test_classifier.py` 內狀態字串（如 `"🚨 重點輔導"`）是硬編碼，改 `data/classifier.py` 的 emoji / 文字要同步更新
 - `tests/test_excel_processor.py::TestProcessExcelFinal` 是 `process_excel_final` 的端對端驗證，改該函式後必跑
 - `@st.cache_data` 跨測試可能互相干擾，新增 case 後建議跑全套
+- Streamlit Cloud 可能用較舊 Python（3.10+），型別註解用 `Optional[X]` 而非 `X | None`
 
 ---
 
@@ -84,6 +93,9 @@ Secrets 在 Streamlit Cloud Dashboard 設定，模板見 `.streamlit/secrets_tem
 - **`safe_secrets()`**（`config.py:37`）不吃 `_parse()` 私有方法了，單純 `return st.secrets`
 - **`st.query_params.get("file")` 是單值**，`?file=a&file=b` 只讀到第一個
 - **勿修改 `..\Credit-Union-Analysis new\`**（歷史備份）
+- **CSV 年月是字串（`YYYYMM`）非 datetime**：`csv_processor.py:11` 轉 `str`，`diagnosis_service.py` 需自行 `pd.to_datetime(..., format="%Y%m")`
+- **`st.columns(4)` 手機版會擠壓**：CSS `@media (max-width: 640px)` 強制 `width: 100%` 已在 `config.py` 處理
+- **側邊欄手機版需抽屜式**：`config.py` 有 `position: fixed` + `transform` 切換，依賴 `aria-expanded="true"`
 
 ---
 
