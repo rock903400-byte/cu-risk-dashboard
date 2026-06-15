@@ -14,9 +14,11 @@ _DOWNLOAD_CONFIG = {
 }
 
 
+from typing import Optional
+
 def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFrame,
-                         region_data: pd.DataFrame | None, config: dict,
-                         assigned_union: str | None = None, is_district_office: bool = False):
+                         region_data: Optional[pd.DataFrame], config: dict,
+                         assigned_union: Optional[str] = None, is_district_office: bool = False):
     THEME = config["THEME_BG"]
     T = config["THRESHOLDS"]
 
