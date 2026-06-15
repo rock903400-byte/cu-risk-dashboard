@@ -11,6 +11,7 @@ _DOWNLOAD_CONFIG = {
     "modeBarButtons": [["toImage"]],
     "displaylogo": False,
     "toImageButtonOptions": {"format": "png", "scale": 3},
+    "responsive": True,
 }
 
 

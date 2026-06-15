@@ -101,9 +101,20 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {{ font-size: 2.2rem !important; font-weight: 700 !important; word-break: break-all !important; overflow-wrap: anywhere !important; white-space: normal !important; line-height: 1.2 !important; text-overflow: clip !important; overflow: visible !important; }}
 [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] > div {{ font-size: 1.1rem !important; font-weight: 600 !important; word-break: break-word !important; white-space: normal !important; text-overflow: clip !important; overflow: visible !important; }}
 [data-testid="metric-container"] {{ overflow: visible !important; }}
-[data-testid="stDataFrame"] {{ font-size: 18px !important; }}
-[data-testid="stDataFrame"] td {{ font-size: 18px !important; padding: 10px 8px !important; }}
-[data-testid="stDataFrame"] th {{ font-size: 18px !important; padding: 10px 8px !important; }}
+    [data-testid="stDataFrame"] {{ font-size: 18px !important; }}
+    [data-testid="stDataFrame"] td {{ font-size: 18px !important; padding: 10px 8px !important; }}
+    [data-testid="stDataFrame"] th {{ font-size: 18px !important; padding: 10px 8px !important; }}
+
+/* 手機版：DataFrame 橫向捲動 */
+@media (max-width: 640px) {{
+    [data-testid="stDataFrame"] > div {{
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }}
+    [data-testid="stDataFrame"] table {{
+        min-width: 600px !important;
+    }}
+}}
 @media (max-width: 640px) {{
     html, body, [data-testid="stAppViewContainer"] {{ font-size: 18px !important; }}
     [data-testid="stMainBlockContainer"] {{
@@ -123,10 +134,69 @@ html, body, [data-testid="stAppViewContainer"] {{
     [data-testid="stCheckboxContainer"] {{ min-height: 56px !important; }}
     [data-testid="stExpander"] summary {{ min-height: 56px !important; padding: 14px 16px !important; }}
     .stDownloadButton > button {{ min-height: 56px !important; }}
+
+/* 手機版：4 欄自動疊疊為單欄 */
+    [data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
+        min-width: 0 !important;
+    }}
+    @media (max-width: 640px) {{
+        [data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+        }}
+    }}
 }}
 [data-testid="stSidebar"] {{ background-color: #1E293B !important; min-width: 280px !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
 [data-testid="stSidebar"] hr {{ border-color: #334155 !important; margin: 1.5rem 0 !important; }}
+
+/* 手機版：側邊欄抽屜式 */
+@media (max-width: 640px) {{
+    [data-testid="stSidebar"] {{
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 85vw !important;
+        max-width: 320px !important;
+        z-index: 9999 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease !important;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+    }}
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        transform: translateX(0) !important;
+    }}
+    [data-testid="stSidebar"] > div:first-child {{
+        height: 100vh;
+        overflow-y: auto;
+    }}
+    /* 側邊欄開關按鈕 */
+    [data-testid="collapsedControl"] {{
+        display: block !important;
+        position: fixed !important;
+        top: 1rem;
+        left: 1rem;
+        z-index: 10000 !important;
+        background: #1E293B !important;
+        color: #E2E8F0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+    }}
+    /* 遮罩層 */
+    .sidebar-overlay {{
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9998;
+    }}
+    .sidebar-overlay.visible {{
+        display: block;
+    }}
+}}
 [data-testid="stSidebar"] .stButton > button {{
     background: #334155; color: #E2E8F0 !important; border: 1px solid #475569;
     border-radius: 10px; padding: 0.5rem 1rem; font-weight: 600;
