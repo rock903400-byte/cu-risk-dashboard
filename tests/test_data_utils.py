@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
-from data.utils import convert_minguo_date, format_large_number, safe_div
+from common.dates import convert_minguo_date
+from common.utils import format_large_number, safe_div
 
 
 class TestConvertMinguoDate:

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from data.utils import safe_div, format_large_number
+from common.utils import safe_div, format_large_number
 from services.finance_service import get_annual_snapshot
 
 THRESHOLDS = {

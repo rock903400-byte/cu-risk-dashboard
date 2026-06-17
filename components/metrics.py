@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from data.utils import format_large_number
+from common.utils import format_large_number
 from services.finance_service import calc_yoy_pct
 
 

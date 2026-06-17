@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from charts.style import apply_chart_style
-from data.utils import safe_div, format_large_number
+from common.utils import safe_div, format_large_number
 
 _DOWNLOAD_CONFIG = {
     "displayModeBar": True,

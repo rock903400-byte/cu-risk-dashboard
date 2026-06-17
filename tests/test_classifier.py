@@ -1,5 +1,5 @@
 import pytest
-from data.classifier import classify, classify_code
+from common.classifier import classify, classify_code
 
 THRESHOLDS = {
     "high_risk_income_ratio": 1.0,

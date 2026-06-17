@@ -4,8 +4,8 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from data.classifier import classify_code
-from data.utils import format_large_number
+from common.classifier import classify_code
+from common.utils import format_large_number
 from services.finance_service import detect_yoy_anomalies, prepare_waterfall_data
 
 CATEGORY_COLORS = {

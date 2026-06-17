@@ -3,8 +3,8 @@ import streamlit as st
 
 from components.charts import render_ranking_tabs, render_waterfall, render_yearly_trend, render_yoy_anomalies
 from components.metrics import render_kpi_cards
-from data.classifier import classify_code
-from data.utils import format_large_number
+from common.classifier import classify_code
+from common.utils import format_large_number
 from services.finance_service import get_annual_snapshot
 from services.diagnosis_service import calc_ratios, rate_ratio, calc_trend
 
