@@ -94,8 +94,9 @@ IS_ADMIN   = (st.session_state["role"] == "admin")
 data_loaded = False
 region_data = None
 
-if st.session_state["preloaded_data"]:
-    data, df_m, df_l, raw_bytes, region_map = st.session_state["preloaded_data"]
+_pd = st.session_state["preloaded_data"]
+if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
+    data, df_m, df_l, raw_bytes, region_map = _pd
     region = st.session_state["assigned_region"]
     union  = st.session_state["assigned_union"]
 

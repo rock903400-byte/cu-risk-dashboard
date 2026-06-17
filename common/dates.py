@@ -19,4 +19,6 @@ def get_value(df, col, d):
     if df.empty:
         return 0.0
     sub = df[df["年月"] <= d]
-    return float(sub[col].iloc[-1]) if not sub.empty else float(df[col].iloc[0])
+    if sub.empty:
+        return 0.0
+    return float(sub[col].iloc[-1])

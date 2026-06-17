@@ -14,12 +14,12 @@ from common.classifier import classify
 from common.cleaning import defensive_clean_series
 
 
-_CACHE_VER = "v3"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
+_CACHE_VER = "v4"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
 
 
 @st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
-    _VER = "v6"  # bump when classifier.py logic changes; this string IS in bytecode
+    _VER = "v7"  # bump when classifier.py logic changes; this string IS in bytecode
     try:
         with pd.ExcelFile(io.BytesIO(file_bytes)) as xls:
             if not all(s in xls.sheet_names for s in sheets.values()):
@@ -58,6 +58,9 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
 
     df_m = df_m_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
     df_l = df_l_raw.dropna(subset=["年月"]).sort_values(["社號", "年月"])
+
+    if df_m.empty:
+        return pd.DataFrame(), df_m, df_l, pw_to_info, region_map
 
     max_d   = df_m["年月"].max()
     min_d   = df_m["年月"].min()

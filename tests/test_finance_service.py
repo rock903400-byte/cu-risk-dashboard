@@ -23,11 +23,24 @@ def _make_analysis_df() -> pd.DataFrame:
 
 
 def _make_agg_df() -> pd.DataFrame:
-    """合成 annual_agg DataFrame（含收入與各費用類別）"""
+    """合成 annual_agg DataFrame（真實下載工具 CSV 格式：費用為負值）"""
     return pd.DataFrame([
         {"會計科目": "4101", "會科名稱": "利息收入", "當月金額": 10000},
-        {"會計科目": "5101", "會科名稱": "利息支出", "當月金額": 3000},
-        {"會計科目": "5201", "會科名稱": "薪資費用", "當月金額": 2000},
+        {"會計科目": "5101", "會科名稱": "利息支出", "當月金額": -3000},
+        {"會計科目": "5201", "會科名稱": "薪資費用", "當月金額": -2000},
+    ])
+
+
+def _make_multi_expense_df() -> pd.DataFrame:
+    """模擬完整損益場景：收入 + 5 類費用（回歸測試 waterfall net bug）"""
+    return pd.DataFrame([
+        {"會計科目": "4101", "會科名稱": "利息收入", "當月金額": 247000},
+        {"會計科目": "4201", "會科名稱": "其他收入", "當月金額": 63000},
+        {"會計科目": "5101", "會科名稱": "利息支出", "當月金額": -91000},
+        {"會計科目": "5201", "會科名稱": "用人費用", "當月金額": -61000},
+        {"會計科目": "5301", "會科名稱": "業務費",   "當月金額": -30500},
+        {"會計科目": "5401", "會科名稱": "管理費用", "當月金額": -15000},
+        {"會計科目": "5501", "會科名稱": "呆帳提列", "當月金額": -6000},
     ])
 
 
@@ -108,6 +121,29 @@ class TestPrepareWaterfallData:
         result = prepare_waterfall_data(_make_agg_df())
         assert result["labels"][0] == "總收入"
         assert result["values"][0] == pytest.approx(10000)
+
+    def test_net_with_realistic_negative_expenses(self):
+        """回歸測試：真實下載工具 CSV 格式（費用為負），net 須等於 收入 + Σ負費用"""
+        result = prepare_waterfall_data(_make_multi_expense_df())
+        income = 247000 + 63000
+        expected_net = income - 91000 - 61000 - 30500 - 15000 - 6000
+        assert result["net"] == pytest.approx(expected_net)
+
+    def test_expense_bars_are_negative_for_waterfall(self):
+        """瀑布圖支出 bar 必須是負值，圖形才會正確往下減"""
+        result = prepare_waterfall_data(_make_multi_expense_df())
+        relative_values = [v for v, m in zip(result["values"], result["measures"]) if m == "relative"]
+        assert all(v < 0 for v in relative_values), \
+            f"支出 bars 應全為負,實際:{relative_values}"
+
+    def test_net_with_zero_income(self):
+        """邊界：無收入時,瀑布圖 net 應為負（純虧損）"""
+        df = pd.DataFrame([
+            {"會計科目": "5101", "會科名稱": "利息支出", "當月金額": -3000},
+            {"會計科目": "5201", "會科名稱": "用人費用", "當月金額": -2000},
+        ])
+        result = prepare_waterfall_data(df)
+        assert result["net"] == pytest.approx(-5000)
 
 
 class TestDetectYoyAnomalies:

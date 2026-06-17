@@ -3,7 +3,7 @@ import pandas as pd
 
 def safe_div(n, d):
     try:
-        if d and not pd.isna(d) and d != 0:
+        if not pd.isna(n) and d and not pd.isna(d) and d != 0:
             return n / d
     except:
         pass

@@ -34,14 +34,14 @@ class TestGetValue:
         result = _get_value(df, "社員數", pd.Timestamp("2023-03-01"))
         assert result == pytest.approx(100.0)
 
-    def test_no_matching_date_falls_back_to_first(self):
+    def test_no_matching_date_returns_zero(self):
         df = _make_df(
             [pd.Timestamp("2023-06-01"), pd.Timestamp("2023-12-01")],
             [500, 600],
         )
-        # 查詢日期早於所有資料 → 落回第一筆
+        # 查詢日期早於所有資料 → 回傳 0.0（避免取到未來值）
         result = _get_value(df, "社員數", pd.Timestamp("2023-01-01"))
-        assert result == pytest.approx(500.0)
+        assert result == pytest.approx(0.0)
 
     def test_exact_date_match(self):
         df = _make_df([pd.Timestamp("2023-12-01")], [999])
