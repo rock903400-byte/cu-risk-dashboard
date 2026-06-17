@@ -29,9 +29,9 @@ def render_kpi_cards(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame | None):
     c1, c2, c3 = st.columns(3)
     c1.metric("💵 年度總收入（新台幣）", format_large_number(income),  fmt_yoy(yoy_inc),
               delta_color="inverse",
-              help="▲ 紅代表收入成長")
+              help="與去年同期的變化。正值＝增加,負值＝減少。\n收入增加是好事。")
     c2.metric("💸 年度總支出（新台幣）", format_large_number(expense), fmt_yoy(yoy_exp),
-              help="▲ 綠代表支出惡化（支出越低越好）")
+              help="與去年同期的變化。正值＝增加,負值＝減少。\n支出減少是好事。")
     c3.metric("📊 本期損益（新台幣）",   format_large_number(profit),  fmt_yoy(yoy_prf),
               delta_color="inverse",
-              help="▲ 紅代表淨利成長")
+              help="與去年同期的變化。正值＝增加,負值＝減少。\n淨利增加是好事。")

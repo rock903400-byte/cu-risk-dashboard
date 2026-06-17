@@ -19,6 +19,7 @@ from data.csv_processor import process_csv_final
 from data.excel_processor import process_excel_final
 from views.overview import render_overview_page
 from views.war_room import render_war_room_page
+from components.onboarding import render_welcome_page, maybe_show_first_time_tip
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ _DEFAULTS = {
     "confirm_logout":     False,
     "xl_msg":             None,
     "csv_msg":            None,
+    "seen_color_tip":     False,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -218,8 +220,14 @@ if IS_ADMIN:
                 st.code(st.session_state["latest_share_url"], language="text")
 
 if not data_loaded:
-    st.info("👋 歡迎使用分析系統！請由側邊欄上傳 Excel 檔案或點擊分享連結。")
+    render_welcome_page(
+        is_admin=IS_ADMIN,
+        is_district_office=st.session_state.get("is_district_office", False),
+        has_share_link=bool(shared_file or shared_csv),
+    )
     st.stop()
+
+maybe_show_first_time_tip()
 
 # ── 標題 ──────────────────────────────────────────────────
 if st.session_state.get("is_district_office"):

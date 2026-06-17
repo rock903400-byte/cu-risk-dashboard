@@ -250,5 +250,152 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stExpander"] summary {{ font-size: 1.1rem !important; padding: 12px 16px !important; min-height: 48px !important; }}
 [data-baseweb="tag"] {{ font-size: 1rem !important; padding: 4px 10px !important; }}
 .stDownloadButton > button {{ min-height: 52px !important; font-size: 18px !important; }}
+
+/* === Onboarding 歡迎頁 === */
+.welcome-hero {{
+    text-align: center;
+    padding: 2rem 1rem 1rem 1rem;
+    margin-bottom: 1.5rem;
+}}
+.welcome-title {{
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 0.5rem !important;
+}}
+.welcome-subtitle {{
+    font-size: 1.25rem;
+    color: #475569;
+    margin: 0;
+}}
+.step-card {{
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    border: 1px solid #E2E8F0;
+    height: 100%;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}}
+.step-card:hover {{
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}}
+.step-num {{
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}}
+.step-1 {{ background: linear-gradient(135deg, #3B82F6, #1E40AF); }}
+.step-2 {{ background: linear-gradient(135deg, #F59E0B, #92400E); }}
+.step-3 {{ background: linear-gradient(135deg, #10B981, #065F46); }}
+.step-icon {{
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}}
+.step-card h3 {{
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0.5rem 0;
+}}
+.step-card p {{
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+}}
+
+/* === 狀態色票圖例 === */
+.legend-card {{
+    border-radius: 12px;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    border: 2px solid;
+    height: 100%;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}}
+.legend-emoji {{ font-size: 1.8rem; margin-bottom: 0.3rem; }}
+.legend-card strong {{ font-size: 1.05rem; font-weight: 700; }}
+.legend-desc {{ font-size: 0.9rem; margin: 0.2rem 0 0 0; opacity: 0.85; }}
+.legend-red    {{ background: #FEF2F2; color: #991B1B; border-color: #FCA5A5; }}
+.legend-orange {{ background: #FFFBEB; color: #92400E; border-color: #FCD34D; }}
+.legend-blue   {{ background: #EFF6FF; color: #1E40AF; border-color: #93C5FD; }}
+.legend-green  {{ background: #F0FDF4; color: #166534; border-color: #86EFAC; }}
+.legend-gray   {{ background: #F8FAFC; color: #475569; border-color: #CBD5E1; }}
+
+/* === 角色化 CTA === */
+.cta-box {{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 14px;
+    border: 1px solid;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-top: 1rem;
+}}
+.cta-icon {{ font-size: 2rem; flex-shrink: 0; }}
+.cta-admin  {{ background: #F0FDF4; border-color: #86EFAC; color: #166534; }}
+.cta-viewer {{ background: #FFFBEB; border-color: #FCD34D; color: #92400E; }}
+
+/* === 首次提示橫幅 === */
+.first-time-tip {{
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+    border: 2px solid #93C5FD;
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}}
+.tip-title {{
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1E40AF;
+    margin-bottom: 0.5rem;
+}}
+.tip-body {{
+    font-size: 1.05rem;
+    color: #1E293B;
+    line-height: 1.7;
+}}
+.tip-red    {{ color: #991B1B; font-weight: 700; }}
+.tip-orange {{ color: #92400E; font-weight: 700; }}
+.tip-blue   {{ color: #1E40AF; font-weight: 700; }}
+.tip-green  {{ color: #166534; font-weight: 700; }}
+
+/* === 手機版 onboarding === */
+@media (max-width: 640px) {{
+    .welcome-title {{ font-size: 1.9rem !important; }}
+    .welcome-subtitle {{ font-size: 1.05rem !important; }}
+    .step-card {{ min-height: auto; padding: 1.2rem 0.8rem; }}
+    .step-card h3 {{ font-size: 1.15rem; }}
+    .step-card p {{ font-size: 0.95rem; }}
+    .legend-card {{ min-height: 110px; padding: 0.8rem 0.4rem; }}
+    .legend-emoji {{ font-size: 1.5rem; }}
+    .legend-card strong {{ font-size: 0.95rem; }}
+    .legend-desc {{ font-size: 0.8rem; }}
+    .cta-box {{ font-size: 1rem; padding: 1rem; }}
+    .first-time-tip {{ padding: 1rem; }}
+    .tip-title {{ font-size: 1.05rem; }}
+    .tip-body {{ font-size: 0.95rem; }}
+}}
 </style>
 """

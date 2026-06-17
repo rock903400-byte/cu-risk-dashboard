@@ -76,17 +76,17 @@ def render_overview_page(data: pd.DataFrame, df_m: pd.DataFrame, df_l: pd.DataFr
         c1.metric("社員總數（人）",  f"{int(total_mem):,}",
                   f"{safe_div(total_mem - prev_mem, prev_mem):.2%}",
                   delta_color="inverse",
-                  help="▲ 紅代表社員成長")
+                  help="與去年同期相比的變化。正值＝增加,負值＝減少。\n對社員人數而言,增加是好事。")
         c2.metric("股金總額",  format_large_number(total_shr),
                   f"{safe_div(total_shr - prev_shr, prev_shr):.2%}",
                   delta_color="inverse",
-                  help="▲ 紅代表股金成長")
+                  help="與去年同期相比的變化。正值＝增加,負值＝減少。\n對股金而言,增加是好事。")
         c3.metric(f"{avg_label}開支比", f"{curr_開支比_avg:.2%}",
                   _yoy_str(curr_開支比_avg, prev_開支比_avg),
-                  help="▲ 綠代表開支比惡化（越低越好）")
+                  help="與去年同期相比的變化。開支比越低代表財務越健康。")
         c4.metric(f"{avg_label}逾放比", f"{curr_逾放比_avg:.2%}",
                   _yoy_str(curr_逾放比_avg, prev_逾放比_avg),
-                  help="▲ 綠代表逾放比惡化（越低越好）")
+                  help="與去年同期相比的變化。逾放比越低代表放款品質越好。")
 
         st.markdown("### 狀態雷達監控")
 
