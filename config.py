@@ -369,30 +369,6 @@ html, body, [data-testid="stAppViewContainer"] {{
 .cta-admin  {{ background: #F0FDF4; border-color: #86EFAC; color: #166534; }}
 .cta-viewer {{ background: #FFFBEB; border-color: #FCD34D; color: #92400E; }}
 
-/* === 首次提示橫幅 === */
-.first-time-tip {{
-    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
-    border: 2px solid #93C5FD;
-    border-radius: 14px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-}}
-.tip-title {{
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #1E40AF;
-    margin-bottom: 0.5rem;
-}}
-.tip-body {{
-    font-size: 1.05rem;
-    color: #1E293B;
-    line-height: 1.7;
-}}
-.tip-red    {{ color: #991B1B; font-weight: 700; }}
-.tip-orange {{ color: #92400E; font-weight: 700; }}
-.tip-blue   {{ color: #1E40AF; font-weight: 700; }}
-.tip-green  {{ color: #166534; font-weight: 700; }}
-
 /* === 手機版 onboarding === */
 @media (max-width: 640px) {{
     .welcome-title {{ font-size: 1.9rem !important; }}
@@ -405,9 +381,6 @@ html, body, [data-testid="stAppViewContainer"] {{
     .legend-card strong {{ font-size: 0.95rem; }}
     .legend-desc {{ font-size: 0.8rem; }}
     .cta-box {{ font-size: 1rem; padding: 1rem; }}
-    .first-time-tip {{ padding: 1rem; }}
-    .tip-title {{ font-size: 1.05rem; }}
-    .tip-body {{ font-size: 0.95rem; }}
 }}
 </style>
 """

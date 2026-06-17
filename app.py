@@ -21,7 +21,7 @@ from data.csv_processor import process_csv_final
 from data.excel_processor import process_excel_final
 from views.overview import render_overview_page
 from views.war_room import render_war_room_page
-from components.onboarding import render_welcome_page, maybe_show_first_time_tip
+from components.onboarding import render_welcome_page
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -53,7 +53,6 @@ _DEFAULTS = {
     "confirm_logout": False,
     "xl_msg": None,
     "csv_msg": None,
-    "seen_color_tip": False,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -251,8 +250,6 @@ if not data_loaded:
         has_share_link=bool(shared_file or shared_csv),
     )
     st.stop()
-
-maybe_show_first_time_tip()
 
 # ── 標題 ──────────────────────────────────────────────────
 if st.session_state.get("is_district_office"):

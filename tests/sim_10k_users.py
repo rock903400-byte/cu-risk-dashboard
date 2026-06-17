@@ -530,7 +530,6 @@ def section_f():
             "confirm_logout": False,
             "xl_msg": None,
             "csv_msg": None,
-            "seen_color_tip": False,
         }
         try:
             for op in ops:
@@ -554,7 +553,6 @@ def section_f():
                             "confirm_logout",
                             "xl_msg",
                             "csv_msg",
-                            "seen_color_tip",
                         ):
                             session[k] = type(session[k])()
                 elif op == "increment_attempts":
@@ -852,7 +850,6 @@ def section_i():
             elif persona == "首次登入 tip 未關":
                 at.session_state["logged_in"] = True
                 at.session_state["role"] = "admin"
-                at.session_state["seen_color_tip"] = False
 
             if random.random() < 0.3:
                 at.query_params["file"] = f"xl_{random.randint(1, 10000)}.xlsx"

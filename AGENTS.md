@@ -73,7 +73,6 @@ app.py                            主入口（路由、session state、登入）
 | `preloaded_passwords` | 從 Excel「區域分類表」讀出的 `{密碼: {name, region}}` | `{}` |
 | `nav_selection` | 當前 tab 文字 | `"📊 社務診斷"` |
 | `is_district_office` | True=區會模式 / False=個社或 admin | `False` |
-| `seen_color_tip` | onboarding tip 是否已永久關閉 | `False` |
 | `confirm_logout` | 登出二次確認中 | `False` |
 | `xl_msg` / `csv_msg` | 上傳成功/失敗訊息持久顯示 | `None` |
 | `preload_err` | 雲端預載失敗訊息（render_login_page 內顯示） | — |

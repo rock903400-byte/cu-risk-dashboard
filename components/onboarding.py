@@ -2,8 +2,6 @@
 Onboarding 引導元件 — 給第一次使用或沒有資料時的引導畫面。
 """
 
-from typing import Optional
-
 import streamlit as st
 
 
@@ -174,38 +172,3 @@ def render_welcome_page(
             """,
             unsafe_allow_html=True,
         )
-
-
-def maybe_show_first_time_tip() -> None:
-    """
-    首次登入顯示 5 秒的「狀態顏色速覽」提示橫幅,使用者可永久關閉。
-    透過 st.session_state["seen_color_tip"] 控制。
-    """
-    if st.session_state.get("seen_color_tip", False):
-        return
-
-    st.markdown(
-        """
-        <div class="first-time-tip">
-            <div class="tip-title">💡 第一次使用？看這裡！</div>
-            <div class="tip-body">
-                全站狀態用 <b>4 種顏色</b> 標示風險：<br>
-                <span class="tip-red">🚨 紅</span>＝特別關懷　
-                <span class="tip-orange">⚠️ 橘</span>＝流動性緊繃　
-                <span class="tip-blue">💤 藍</span>＝資金閒置　
-                <span class="tip-green">✅ 綠</span>＝穩健模範
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    col_a, col_b = st.columns([1, 5])
-    with col_a:
-        if st.button(
-            "✅ 知道了,以後不再顯示", key="dismiss_tip", use_container_width=True
-        ):
-            st.session_state["seen_color_tip"] = True
-            st.rerun()
-    with col_b:
-        st.caption("點上方按鈕可永久關閉此提示")
