@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>儲互社分析系統 — 使用者訓練手冊</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: #F0F4F8;
+    color: #1A202C;
+    font-size: 18px;
+    line-height: 1.8;
+  }
+  /* ── 導覽列 ── */
+  nav.toc {
+    position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+    background: #1E293B; color: #E2E8F0; overflow-y: auto; z-index: 100;
+    padding: 1.5rem 1rem;
+  }
+  nav.toc h2 { font-size: 1.2rem; margin-bottom: 1rem; color: #94A3B8; text-align: center; }
+  nav.toc a {
+    display: block; color: #CBD5E1; text-decoration: none;
+    padding: 0.5rem 0.8rem; border-radius: 8px; font-size: 0.95rem;
+    transition: background 0.2s;
+  }
+  nav.toc a:hover { background: #334155; color: #FFF; }
+  nav.toc a.l2 { padding-left: 1.8rem; font-size: 0.85rem; color: #94A3B8; }
+  nav.toc a.active { background: #3B82F6; color: #FFF; font-weight: 600; }
+
+  /* ── 主內容 ── */
+  main {
+    margin-left: 300px;
+    padding: 2rem 3rem 6rem;
+    max-width: 1000px;
+  }
+  @media (max-width: 800px) {
+    nav.toc { display: none; }
+    main { margin-left: 0; padding: 1rem 1.5rem; }
+  }
+
+  section { margin-bottom: 4rem; }
+  h1 {
+    font-size: 2.8rem; font-weight: 900; margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #1E293B, #3B82F6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  h2 {
+    font-size: 2rem; font-weight: 700; margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem; border-bottom: 4px solid #3B82F6;
+    color: #1E293B;
+  }
+  h3 {
+    font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.8rem;
+    color: #1E293B;
+  }
+  h4 { font-size: 1.2rem; font-weight: 600; margin: 1rem 0 0.5rem; color: #475569; }
+
+  p { margin-bottom: 1rem; }
+  ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+  li { margin-bottom: 0.3rem; }
+
+  /* ── 提示框 ── */
+  .tip {
+    padding: 1rem 1.2rem; border-radius: 12px; margin: 1rem 0;
+    border-left: 5px solid;
+  }
+  .tip.info    { background: #EFF6FF; border-color: #3B82F6; color: #1E40AF; }
+  .tip.success { background: #F0FDF4; border-color: #10B981; color: #065F46; }
+  .tip.warning { background: #FFFBEB; border-color: #F59E0B; color: #92400E; }
+  .tip.danger  { background: #FEF2F2; border-color: #EF4444; color: #991B1B; }
+  .tip strong  { display: block; margin-bottom: 0.3rem; font-size: 1.1rem; }
+
+  /* ── 卡片網格 ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media (max-width: 600px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: white; border-radius: 14px; padding: 1.2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #E2E8F0;
+  }
+  .card .label {
+    font-size: 0.85rem; color: #64748B; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .card .value { font-size: 1.8rem; font-weight: 700; margin: 0.3rem 0; }
+  .card .desc  { font-size: 0.95rem; color: #475569; }
+
+  .tag {
+    display: inline-block; padding: 0.2rem 0.8rem; border-radius: 20px;
+    font-weight: 600; font-size: 0.85rem; margin-right: 0.3rem;
+  }
+  .tag.red    { background: #FEE2E2; color: #991B1B; }
+  .tag.orange { background: #FEF3C7; color: #92400E; }
+  .tag.blue   { background: #DBEAFE; color: #1E40AF; }
+  .tag.green  { background: #DCFCE7; color: #166534; }
+  .tag.gray   { background: #F1F5F9; color: #475569; }
+
+  /* ── 表格 ── */
+  table {
+    width: 100%; border-collapse: collapse; margin: 1rem 0;
+    font-size: 0.95rem;
+  }
+  th, td {
+    padding: 0.7rem 0.8rem; border: 1px solid #E2E8F0; text-align: left;
+  }
+  th { background: #F8FAFC; font-weight: 700; color: #1E293B; }
+
+  /* ── 步驟 ── */
+  .step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem; background: white; border-radius: 12px;
+    margin: 0.5rem 0; border: 1px solid #E2E8F0;
+  }
+  .step .num {
+    width: 36px; height: 36px; border-radius: 50%; background: #3B82F6;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; flex-shrink: 0; font-size: 1rem;
+  }
+  .step .body { flex: 1; }
+  .step .body strong { display: block; margin-bottom: 0.2rem; }
+
+  /* ── 明暗對照表 ── */
+  .signal-table { margin: 1rem 0; }
+  .signal-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.8rem 1rem; background: white; border-radius: 10px;
+    margin-bottom: 0.5rem; border: 1px solid #E2E8F0;
+  }
+  .signal-row .bullet {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .card-header {
+    padding: 0.6rem 1rem; border-radius: 10px 10px 0 0;
+    color: #FFF !important; font-weight: 700; text-align: center;
+    margin: -1.2rem -1.2rem 0.8rem; font-size: 1.1rem;
+  }
+  .card-header.red    { background: linear-gradient(135deg, #EF4444, #991B1B); }
+  .card-header.orange { background: linear-gradient(135deg, #F59E0B, #92400E); }
+  .card-header.blue   { background: linear-gradient(135deg, #3B82F6, #1E40AF); }
+  .card-header.green  { background: linear-gradient(135deg, #10B981, #065F46); }
+
+  .metric-good { color: #10B981; font-weight: 700; }
+  .metric-bad  { color: #EF4444; font-weight: 700; }
+  kbd {
+    background: #1E293B; color: #E2E8F0; padding: 0.2rem 0.6rem;
+    border-radius: 6px; font-size: 0.9rem;
+  }
+  hr { margin: 2rem 0; border: none; border-top: 1px solid #E2E8F0; }
+  .hero {
+    text-align: center; padding: 3rem 0 2rem;
+  }
+  .hero .subtitle {
+    font-size: 1.3rem; color: #64748B; margin-top: 0.5rem;
+  }
+  .hero .badge {
+    display: inline-block; background: #DCFCE7; color: #166534;
+    padding: 0.3rem 1.2rem; border-radius: 20px; font-weight: 700;
+    font-size: 1rem; margin: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- 側邊導覽 -->
+<!-- ============================================================ -->
+<nav class="toc" id="toc">
+  <h2>📋 目錄</h2>
+  <a href="#intro">1. 系統簡介</a>
+  <a href="#login" class="l2">1.1 登入方式</a>
+  <a href="#roles" class="l2">1.2 三種身份</a>
+  <a href="#basics">2. 基本操作</a>
+  <a href="#upload" class="l2">2.1 上傳資料</a>
+  <a href="#share" class="l2">2.2 分享連結</a>
+  <a href="#nav" class="l2">2.3 系統導覽</a>
+  <a href="#overview">3. 社務診斷（3 分鐘看懂）</a>
+  <a href="#tab-ov" class="l2">3.1 經營總覽</a>
+  <a href="#tab-risk" class="l2">3.2 風險矩陣</a>
+  <a href="#tab-health" class="l2">3.3 個社健檢</a>
+  <a href="#tab-trend" class="l2">3.4 趨勢追蹤</a>
+  <a href="#tab-export" class="l2">3.5 報表匯出</a>
+  <a href="#warroom">4. 財務戰情室</a>
+  <a href="#tab-bs" class="l2">4.1 資產負債表</a>
+  <a href="#tab-is" class="l2">4.2 綜合損益表</a>
+  <a href="#tab-annual" class="l2">4.3 年度概覽</a>
+  <a href="#tab-deep" class="l2">4.4 深度分析</a>
+  <a href="#tab-diag" class="l2">4.5 財務診斷</a>
+  <a href="#classify">5. 風險分類與應對</a>
+  <a href="#classify-5" class="l2">5.1 五項檢測</a>
+  <a href="#classify-status" class="l2">5.2 五種狀態</a>
+  <a href="#classify-signal" class="l2">5.3 紅綠燈邏輯</a>
+  <a href="#classify-action" class="l2">5.4 預警後的行動</a>
+  <a href="#ref">6. 指標速查</a>
+  <a href="#faq">7. 常見問題</a>
+</nav>
+
+<!-- ============================================================ -->
+<!-- 主內容 -->
+<!-- ============================================================ -->
+<main>
+
+<!-- ── 標題 ── -->
+<section class="hero">
+  <h1>🏦 儲互社分析系統</h1>
+  <p class="subtitle">使用者訓練手冊 — 操作 × 解讀 × 預警 × 行動</p>
+  <span class="badge">🎯 目標使用者：社職員、區會、管理員</span>
+  <span class="badge">📱 手機 / 電腦 皆可使用</span>
+  <p style="margin-top:1.5rem;color:#64748B;">
+    <a href="https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app" target="_blank" style="color:#3B82F6;font-weight:600;">
+      🔗 立即前往系統 → cu-analysis-v1.streamlit.app
+    </a>
+  </p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 1. 系統簡介 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="intro">
+  <h2>1. 系統簡介</h2>
+  <p>
+    這是一套專為台灣<strong>儲蓄互助社</strong>打造的風險管理與財務分析平台。
+    您只需要上傳 Excel 或 CSV，系統就會<strong>自動算出</strong>每個社的風險狀態、財務比率，並用紅綠燈顏色告訴您<strong>哪個社需要關注</strong>。
+  </p>
+  <div class="tip info">
+    <strong>💡 一句話理解這套系統</strong>
+    「把密密麻麻的報表數字，變成一看就懂的紅綠燈與圖表，讓您知道哪個社有問題、問題在哪裡、該怎麼辦。」
+  </div>
+
+  <h3 id="login">1.1 登入方式</h3>
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <strong>打開連結</strong>
+      打開管理員給您的網址（或上方連結），會看到登入畫面。
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <strong>輸入密碼</strong>
+      <ul>
+        <li><strong>管理員</strong>：輸入管理員密碼，可上傳資料、看全台數據</li>
+        <li><strong>個社 / 區會</strong>：輸入專屬密碼（由管理員設定），系統會自動帶入您的資料範圍</li>
+      </ul>
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <strong>登入成功</strong>
+      左側會顯示您的身份（🔑 管理員模式 或 👁️ 訪客：ＯＯ社）
+    </div>
+  </div>
+
+  <div class="tip warning">
+    <strong>⚠️ 密碼錯誤</strong>
+    連續輸入錯誤 5 次會被鎖定，請聯絡管理員。
+  </div>
+
+  <h3 id="roles">1.2 三種身份與權限</h3>
+  <table>
+    <tr><th>身份</th><th>看到什麼</th><th>可以上傳資料嗎？</th></tr>
+    <tr>
+      <td><span class="tag green">管理員</span></td>
+      <td>全台所有社的數據</td>
+      <td>✅ 可上傳 Excel、CSV，可產生分享連結</td>
+    </tr>
+    <tr>
+      <td><span class="tag blue">區會</span></td>
+      <td>所屬區域內所有社的數據</td>
+      <td>❌ 不可上傳</td>
+    </tr>
+    <tr>
+      <td><span class="tag gray">個社</span></td>
+      <td>只有自己的數據</td>
+      <td>❌ 不可上傳</td>
+    </tr>
+  </table>
+  <div class="tip success">
+    <strong>✅ 登入後的差別</strong>
+    — 管理員可看到「全台平均」<br>
+    — 區會看到「區域平均」<br>
+    — 個社看到自己的數據，旁邊會顯示「區域平均」作為對照
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 2. 基本操作 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="basics">
+  <h2>2. 基本操作</h2>
+
+  <h3 id="upload">2.1 上傳資料（管理員專用）</h3>
+  <p>管理員登入後，左側側邊欄會有「資料匯入」區塊：</p>
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <strong>準備檔案</strong><br>
+      <strong>Excel 檔</strong>：包含三個工作表 — 「社務及資金運用情形」「放款及逾期放款」「區域分類表」<br>
+      <strong>CSV 檔</strong>：會計科目明細（科目代號 + 金額）
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <strong>點選上傳</strong><br>
+      按「Browse files」選取檔案，系統會自動解析。<br>
+      成功會顯示 ✅ Excel/CSV 解析成功
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <strong>開始使用</strong><br>
+      上傳成功後，上方會出現「📊 社務診斷」「⚖️ 財報明細」兩個功能，按一下就能切換。
+    </div>
+  </div>
+
+  <div class="tip info">
+    <strong>💡 資料更新頻率：</strong>建議每月上傳最新資料，系統會自動計算同比（YoY）變化。
+  </div>
+
+  <h3 id="share">2.2 分享連結（管理員專用）</h3>
+  <p>上傳完資料後，側邊欄下方有「生成分享連結」按鈕：</p>
+  <ol>
+    <li>按 <strong>🚀 生成分享連結</strong></li>
+    <li>系統會把檔案上傳到雲端，產生一個網址</li>
+    <li>複製這串網址，發送給個社或區會</li>
+    <li>對方打開連結就會自動載入資料，輸入密碼即可使用</li>
+  </ol>
+  <div class="tip warning">
+    <strong>⚠️ 注意</strong> 連結中有包含檔案代碼，只限收到連結的人能存取。
+  </div>
+
+  <h3 id="nav">2.3 系統導覽</h3>
+  <p>登入後，左側側邊欄有「系統導覽」：</p>
+  <ul>
+    <li><strong>📊 社務診斷</strong> — 風險診斷主畫面（經營總覽、風險矩陣、趨勢）</li>
+    <li><strong>⚖️ 財報明細</strong> — 財務戰情室（資產負債表、損益表、深度分析）</li>
+  </ul>
+  <p>沒看到某個功能？表示您沒有上傳對應的檔案（Excel → 社務診斷、CSV → 財報明細）。</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 3. 社務診斷 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="overview">
+  <h2>3. 📊 社務診斷（3 分鐘看懂全貌）</h2>
+  <p>
+    這是系統的<strong>核心功能</strong>。一進來會看到五個分頁標籤，
+    我們依序介紹最常用的四個。
+  </p>
+
+  <!-- ── 3.1 經營總覽 ── -->
+  <h3 id="tab-ov">3.1 經營總覽 — 第一眼就看這四張卡片</h3>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="label">📌 指標 1</div>
+      <div class="value" style="color:#1E293B;">社員總數</div>
+      <div class="desc">
+        所有社的社員人數加總。後面括號是增減百分比。<br>
+        <span class="metric-good">🔺 紅色 = 社員成長（好）</span><br>
+        <span class="metric-bad">🔻 綠色 = 社員流失</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">📌 指標 2</div>
+      <div class="value" style="color:#1E293B;">股金總額</div>
+      <div class="desc">
+        社員存入的股金總額。<br>
+        <span class="metric-good">🔺 紅色 = 股金增加（好）</span><br>
+        <span class="metric-bad">🔻 綠色 = 股金減少</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">📌 指標 3</div>
+      <div class="value" style="color:#1E293B;">開支比</div>
+      <div class="desc">
+        = 總支出 ÷ 總收入。<strong>越低越好</strong>，超過 100% 表示入不敷出。<br>
+        <span class="metric-bad">🔺 綠色 = 開支比惡化</span><br>
+        <span class="metric-good">🔻 紅色 = 開支比改善（好）</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">📌 指標 4</div>
+      <div class="value" style="color:#1E293B;">逾放比</div>
+      <div class="desc">
+        = 逾期放款 ÷ 總放款。<strong>越低越好</strong>，超過 10% 是高風險。<br>
+        <span class="metric-bad">🔺 綠色 = 逾放比惡化</span><br>
+        <span class="metric-good">🔻 紅色 = 逾放比改善（好）</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip info">
+    <strong>📖 怎麼解讀這四張卡片？</strong><br>
+    <strong>個社模式</strong>：顯示「本社」的數字 + 去年比對<br>
+    <strong>區會/管理員</strong>：顯示「區域平均/全台平均」，可快速掌握整體趨勢<br>
+    ✅ 四張都往好的方向走（社員增、股金增、開支比降、逾放比降）= 經營穩健
+  </div>
+
+  <h4>🟢 狀態雷達監控（四色卡片）</h4>
+  <p>在四張 KPI 卡片下方，有四個狀態卡片，<strong>這是系統最核心的預警功能</strong>：</p>
+  <div class="grid-4" style="margin-bottom:1rem;">
+    <div class="card" style="border-top:4px solid #EF4444;">
+      <div class="card-header red">🚨 特別關懷</div>
+      <div class="desc">5 項檢測中觸發任 2 項以上 → 最需要優先處理</div>
+    </div>
+    <div class="card" style="border-top:4px solid #F59E0B;">
+      <div class="card-header orange">⚠️ 流動性緊繃</div>
+      <div class="desc">貸放比過高（>90%）且股金在流失</div>
+    </div>
+    <div class="card" style="border-top:4px solid #3B82F6;">
+      <div class="card-header blue">💤 資金閒置</div>
+      <div class="desc">貸放比過低（<30%）且逾放比安全 → 錢沒放出去</div>
+    </div>
+    <div class="card" style="border-top:4px solid #10B981;">
+      <div class="card-header green">✅ 穩健模範</div>
+      <div class="desc">社員/股金都成長，貸放比適中（40–80%），逾放比低</div>
+    </div>
+  </div>
+  <p>點卡片會看到該狀態的所有社別名稱。</p>
+
+  <!-- ── 3.2 風險矩陣 ── -->
+  <h3 id="tab-risk">3.2 風險矩陣 — 一眼看穿每間社的位置</h3>
+  <p>
+    這是一個<strong>泡泡散佈圖</strong>，X 軸是「貸放比」、Y 軸是「逾放比」，
+    每一個泡泡就是一間儲互社。
+  </p>
+  <ul>
+    <li><strong>泡泡大小</strong> = 社員人數多寡</li>
+    <li><strong>顏色</strong> = 風險狀態（紅/橙/藍/綠/灰）</li>
+    <li><strong>四象限背景色塊</strong>：
+      <ul>
+        <li><span style="color:#EF4444;">🔴 右上角</span> = 高貸放比 + 高逾放比 → 雙高風險</li>
+        <li><span style="color:#F59E0B;">🟠 右下角</span> = 高貸放比 + 低逾放比 → 流動性緊繃</li>
+        <li><span style="color:#3B82F6;">🔵 左下角</span> = 低貸放比 + 低逾放比 → 資金閒置</li>
+        <li><span style="color:#94A3B8;">⚪ 左上角</span> = 低貸放比 + 高逾放比 → 逾期風險</li>
+      </ul>
+    </li>
+  </ul>
+  <div class="step">
+    <div class="num">💡</div>
+    <div class="body">
+      <strong>使用技巧</strong><br>
+      — 勾選「在圖表上直接顯示社名」，不用滑鼠移過去也能看到社名<br>
+      — 圖表下方有純文字列表，列出各狀態的社別名稱
+    </div>
+  </div>
+
+  <!-- ── 3.3 個社健檢 ── -->
+  <h3 id="tab-health">3.3 個社健檢 — 深入看單一社的狀況</h3>
+  <p>
+    選取一間社後，會看到：
+  </p>
+  <ol>
+    <li><strong>診斷狀態</strong> + 觸發原因（例如「連兩年虧損、貸放比過低」）</li>
+    <li><strong>指標對比柱狀圖</strong>：該社 vs 區域/全台平均（貸放比、儲蓄率、逾放比、開支比…）</li>
+    <li><strong>四張 KPI 數字卡</strong>：現有社員、現有股金、逾放比、開支比</li>
+    <li><strong>近年指標趨勢圖</strong>（年底數據）：開支比、逾放比、貸放比、社員數的多年走勢</li>
+  </ol>
+  <div class="tip warning">
+    <strong>⚠️ 趨勢圖注意</strong>
+    如果只有 1 年資料，圖表不會顯示（歷史資料不足）。資料愈多，趨勢愈有參考價值。
+  </div>
+
+  <!-- ── 3.4 趨勢追蹤 ── -->
+  <h3 id="tab-trend">3.4 趨勢追蹤 — 看指標是變好還是變壞</h3>
+  <p>
+    可同時比較<strong>多間社 + 區域平均</strong>，觀察六大指標隨時間的變化：
+  </p>
+  <ul>
+    <li>⚠️ 逾放比趨勢</li>
+    <li>💰 貸放比趨勢</li>
+    <li>👥 社員數趨勢</li>
+    <li>🏦 儲蓄率趨勢</li>
+    <li>📈 開支比趨勢（只顯示 12 月數據）</li>
+    <li>🛡️ 提撥率趨勢</li>
+  </ul>
+  <p>
+    預設顯示近 36 個月，您可以自行調整起訖月份。<br>
+    <strong>檢查重點</strong>：看線條是往上還是往下，往上不一定壞（要看是什麼指標）。
+  </p>
+
+  <!-- ── 3.5 報表匯出 ── -->
+  <h3 id="tab-export">3.5 報表匯出</h3>
+  <p>
+    可直接在網頁上瀏覽完整報表，或按「📥 匯出 CSV」下載成 Excel 可開的檔案。
+    報表中高風險社別的「診斷狀態」會自動標色。
+  </p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 4. 財務戰情室 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="warroom">
+  <h2>4. ⚖️ 財務戰情室</h2>
+  <p>這個頁面專門處理<strong>CSV 會計科目明細</strong>，適合深入分析財務報表。<br>
+  左側可以篩選「社別」「年度」「月份」，選好後再看各分頁。</p>
+
+  <h3 id="tab-bs">4.1 資產負債表</h3>
+  <p>
+    顯示社在某個月份的資產、負債、權益明細。
+  </p>
+  <ul>
+    <li><strong>左欄</strong>：資產部（現金、放款、設備…）</li>
+    <li><strong>右欄</strong>：負債部 + 權益部（社員股金、公積、盈餘…）</li>
+    <li><strong>自動勾稽</strong>：系統會檢查「資產 = 負債 + 權益」，不平衡會顯示紅字警告</li>
+  </ul>
+  <div class="step">
+    <div class="num">📊</div>
+    <div class="body">
+      <strong>進階功能</strong>：勾選「對比上月」，可以看每個科目跟一個月前的增減變化。<br>
+      <span class="metric-good">🔺 綠色</span> = 增加（資產/權益增加是好，負債增加是壞）<br>
+      <span class="metric-bad">🔻 紅色</span> = 減少
+    </div>
+  </div>
+
+  <h3 id="tab-is">4.2 綜合損益表</h3>
+  <p>
+    顯示某個年度的收入與支出明細，底部會算出「本期淨利（淨損）」。
+  </p>
+  <ul>
+    <li><strong>收入</strong>：利息收入、業務收入…</li>
+    <li><strong>支出</strong>：利息支出、人事費用、業務費用、呆帳提列…</li>
+    <li><strong>本期淨利</strong> = 收入 - 支出。綠底 = 賺錢、紅底 = 虧損</li>
+  </ul>
+  <div class="step">
+    <div class="num">📊</div>
+    <div class="body">
+      <strong>進階功能：</strong>勾選「對比去年」，自動抓取去年同期比較。<br>
+      如果今年只有 10 個月資料，系統會自動用去年同 10 個月做公平對比。
+    </div>
+  </div>
+
+  <h3 id="tab-annual">4.3 年度概覽 — 快速看整年表現</h3>
+  <p>這個分頁會自動產出三種圖表：</p>
+  <ol>
+    <li><strong>KPI 卡片</strong>：總資產、總收入、總支出、本期損益、淨值比… 附帶與去年對比</li>
+    <li><strong>利潤流向瀑布圖</strong>：從總收入開始，扣除各項費用，最後到年度損益，視覺化錢流到哪裡</li>
+    <li><strong>歷年收支趨勢</strong>：多年度的收入/支出長條圖 + 開支比折線</li>
+  </ol>
+
+  <h3 id="tab-deep">4.4 深度分析 — 科目排名與異常偵測</h3>
+  <p>兩大功能：</p>
+  <ul>
+    <li><strong>年度科目變動偵測</strong>：自動找出跟去年相比金額變動最大的科目，並給出建議（例如「利息支出大增，建議檢視現有借款利率」）</li>
+    <li><strong>關鍵科目排名</strong>：按類別（資產/負債/權益/收入/支出）列出金額 Top 10，可選定對比年度做雙年比較</li>
+  </ul>
+
+  <h3 id="tab-diag">4.5 財務診斷 — 比紅綠燈更詳細的健康檢查</h3>
+  <p>這個分頁針對<strong>單一社別</strong>做深入的財務健康診斷，包含：</p>
+
+  <h4>💰 財務結構</h4>
+  <div class="grid-2">
+    <div class="card">
+      <div class="label">負債比</div>
+      <div class="value" style="font-size:1.4rem;">= 總負債 ÷ 總資產</div>
+      <div class="desc">
+        ≤ 80% 🟢 正常 | 80–90% 🟡 偏高 | ≥ 90% 🔴 過高<br>
+        「借太多錢了，自有資金不足」
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">淨值比</div>
+      <div class="value" style="font-size:1.4rem;">= 淨值 ÷ 總資產</div>
+      <div class="desc">
+        ≥ 20% 🟢 充足 | 10–20% 🟡 偏低 | ≤ 10% 🔴 不足<br>
+        「自有資本夠不夠厚」
+      </div>
+    </div>
+  </div>
+
+  <h4>📊 獲利能力</h4>
+  <div class="grid-2">
+    <div class="card">
+      <div class="label">開支比</div>
+      <div class="value" style="font-size:1.4rem;">= 總支出 ÷ 總收入</div>
+      <div class="desc">
+        ≤ 95% 🟢 正常 | 95–105% 🟡 偏高 | ≥ 105% 🔴 超標<br>
+        「賺的錢 cover 得住開銷嗎？」
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">本期損益</div>
+      <div class="value" style="font-size:1.4rem;">= 收入 – 支出</div>
+      <div class="desc">
+        🟢 正數 = 賺錢 | 🔴 負數 = 虧損<br>
+        ⚠️ 連續兩年虧損 => 緊急警示
+      </div>
+    </div>
+  </div>
+
+  <h4>📈 歷年趨勢燈號</h4>
+  <p>
+    最下面有一張表格，列出每一年的開支比、加權平均利率、損益，並用<strong>紅黃綠燈號</strong>標示：
+  </p>
+  <ul>
+    <li><span class="tag green">綠底</span> = 正常</li>
+    <li><span class="tag" style="background:#FEF3C7;color:#92400E;">黃底</span> = 注意</li>
+    <li><span class="tag red">紅底</span> = 危險</li>
+  </ul>
+  <p>如果歷年中有 2 年以上開支比超過 100%，系統會跳出警示。</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 5. 風險分類與應對 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="classify">
+  <h2>5. 🚦 風險分類邏輯與預警應對</h2>
+  <p>系統會自動把每間社分成五種狀態。以下是<strong>完整的判斷規則與應對建議</strong>：</p>
+
+  <h3 id="classify-5">5.1 五項檢測（觸發任 2 項 → 🚨 特別關懷）</h3>
+  <table>
+    <tr><th>#</th><th>檢測項目</th><th>觸發條件</th><th>代表的意義</th></tr>
+    <tr>
+      <td>①</td>
+      <td>連兩年虧損</td>
+      <td>今年和去年開支比都 > 100%</td>
+      <td>連續兩年入不敷出，體質惡化</td>
+    </tr>
+    <tr>
+      <td>②</td>
+      <td>貸放比過低</td>
+      <td>貸放比 < 10% 且比去年更低</td>
+      <td>放款業務萎縮，資金沒有效運用</td>
+    </tr>
+    <tr>
+      <td>③</td>
+      <td>高逾放且惡化</td>
+      <td>逾放比 > 50% 且逾期金額比去年增加</td>
+      <td>放款收不回來且還在惡化</td>
+    </tr>
+    <tr>
+      <td>④</td>
+      <td>人數連三年衰退</td>
+      <td>今年人數 < 去年 < 前年 < 大前年</td>
+      <td>社員持續流失</td>
+    </tr>
+    <tr>
+      <td>⑤</td>
+      <td>股金連三年衰退</td>
+      <td>今年股金 < 去年 < 前年 < 大前年</td>
+      <td>資金持續流出</td>
+    </tr>
+  </table>
+
+  <h3 id="classify-status">5.2 五種狀態與應對行動</h3>
+  <div class="signal-table">
+    <div class="signal-row">
+      <div class="bullet" style="background:#EF4444;"></div>
+      <div style="flex:1;">
+        <strong>🚨 特別關懷</strong><br>
+        <span style="color:#475569;">觸發 2 項以上檢測。最優先處理。</span>
+      </div>
+      <div style="flex:1;">
+        <span class="tip danger" style="display:block;margin:0;padding:0.5rem;font-size:0.9rem;">
+          🔴 建議立即約談該社管理層，擬定改善計畫
+        </span>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="bullet" style="background:#F59E0B;"></div>
+      <div style="flex:1;">
+        <strong>⚠️ 流動性緊繃</strong><br>
+        <span style="color:#475569;">貸放比 > 90% 且股金負成長</span>
+      </div>
+      <div style="flex:1;">
+        <span class="tip warning" style="display:block;margin:0;padding:0.5rem;font-size:0.9rem;">
+          🟠 錢幾乎都放出去了，若股金繼續流失可能週轉不靈。<br>
+          建議：控制新放款、加強吸收股金
+        </span>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="bullet" style="background:#3B82F6;"></div>
+      <div style="flex:1;">
+        <strong>💤 資金閒置</strong><br>
+        <span style="color:#475569;">貸放比 < 30% 且逾放比低</span>
+      </div>
+      <div style="flex:1;">
+        <span class="tip info" style="display:block;margin:0;padding:0.5rem;font-size:0.9rem;">
+          🔵 資金沒有有效運用，利息收入偏低。<br>
+          建議：評估增加放款或投資
+        </span>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="bullet" style="background:#10B981;"></div>
+      <div style="flex:1;">
+        <strong>✅ 穩健模範</strong><br>
+        <span style="color:#475569;">社員/股金成長，貸放比適中，逾放比低</span>
+      </div>
+      <div style="flex:1;">
+        <span class="tip success" style="display:block;margin:0;padding:0.5rem;font-size:0.9rem;">
+          🟢 繼續保持。可作為其他社的學習對象。
+        </span>
+      </div>
+    </div>
+    <div class="signal-row">
+      <div class="bullet" style="background:#94A3B8;"></div>
+      <div style="flex:1;">
+        <strong>📊 一般狀態</strong><br>
+        <span style="color:#475569;">未符合上述任何一種狀態</span>
+      </div>
+      <div style="flex:1;">
+        <span class="tip" style="display:block;margin:0;padding:0.5rem;font-size:0.9rem;background:#F8FAFC;border-color:#94A3B8;">
+          ⚪ 各指標平穩或有小波動，持續觀察即可。
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <h3 id="classify-signal">5.3 紅綠燈邏輯 — 看懂數字旁邊的箭頭</h3>
+  <p>系統中每個指標旁邊都會有 <strong>🔺 或 🔻</strong> 加上百分比，顏色的邏輯如下：</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header green">🟢 漲好跌壞（紅色上升是好）</div>
+      <ul>
+        <li>社員成長</li>
+        <li>股金增加</li>
+        <li>收入增加</li>
+        <li>淨利增加</li>
+        <li>淨值比增加</li>
+      </ul>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">
+        這些指標「越多越好」，所以上升顯示 <span class="metric-good">🔴（好）</span>
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-header red">🔴 跌好漲壞（綠色下降是好）</div>
+      <ul>
+        <li>開支比</li>
+        <li>逾放比</li>
+        <li>負債比</li>
+        <li>支出</li>
+      </ul>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">
+        這些指標「越低越好」，所以下降顯示 <span class="metric-good">🔴（好）</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="tip warning">
+    <strong>⚠️ 容易搞混的重點</strong><br>
+    — 社員數旁邊出現 <span class="metric-good">🔺 紅字 +5%</span> → 社員增加，<strong>是好消息</strong><br>
+    — 逾放比旁邊出現 <span class="metric-bad">🔺 綠字 +2%</span> → 逾放比惡化，<strong>是壞消息</strong><br>
+    簡單記：<strong>紅色 = 往好的方向走，綠色 = 往壞的方向走</strong>（對多數指標而言）
+  </div>
+
+  <h3 id="classify-action">5.4 預警後的SOP（建議行動流程）</h3>
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <strong>看到 🚨 特別關懷</strong><br>
+      → 進入「個社健檢」分頁，選該社查看觸發原因<br>
+      → 再看「趨勢追蹤」確認是短期波動還是長期惡化
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <strong>到財務戰情室深入分析</strong><br>
+      → 切到「⚖️ 財報明細」<br>
+      → 看資產負債表（有沒有異常科目）<br>
+      → 看綜合損益表（哪一項支出特別高）<br>
+      → 看財務診斷（負債比、開支比、歷年趨勢）
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <strong>產出報表與追蹤</strong><br>
+      → 在「社務診斷 > 報表匯出」下載 CSV<br>
+      → 下次上傳新資料後，確認該社狀態是否有改善
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 6. 指標速查表 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="ref">
+  <h2>6. 📋 指標速查表</h2>
+  <p>所有指標的計算方式與意義，一次對照：</p>
+  <table>
+    <tr><th>指標</th><th>計算方式</th><th>正常範圍</th><th>太高/太低代表</th></tr>
+    <tr>
+      <td><strong>貸放比</strong></td>
+      <td>放款總額 ÷ 股金總額</td>
+      <td>40% – 80%</td>
+      <td>&gt;90% 流動性緊繃，&lt;30% 資金閒置</td>
+    </tr>
+    <tr>
+      <td><strong>逾放比</strong></td>
+      <td>逾期放款 ÷ 總放款</td>
+      <td>&lt; 2%</td>
+      <td>&gt;10% 高風險，&gt;50% 嚴重</td>
+    </tr>
+    <tr>
+      <td><strong>開支比</strong></td>
+      <td>總支出 ÷ 總收入</td>
+      <td>&lt; 95%</td>
+      <td>&gt;100% 虧損，&gt;105% 嚴重</td>
+    </tr>
+    <tr>
+      <td><strong>負債比</strong></td>
+      <td>總負債 ÷ 總資產</td>
+      <td>&lt; 80%</td>
+      <td>&gt;90% 自有資金嚴重不足</td>
+    </tr>
+    <tr>
+      <td><strong>淨值比</strong></td>
+      <td>淨值 ÷ 總資產</td>
+      <td>&gt; 20%</td>
+      <td>&lt;10% 資本嚴重不足</td>
+    </tr>
+    <tr>
+      <td><strong>儲蓄率</strong></td>
+      <td>儲蓄存款 ÷ 股金</td>
+      <td>&gt; 60%</td>
+      <td>過低代表吸收儲蓄能力差</td>
+    </tr>
+    <tr>
+      <td><strong>提撥率</strong></td>
+      <td>備抵呆帳 ÷ 放款</td>
+      <td>&gt; 1%</td>
+      <td>過低代表風險準備不足</td>
+    </tr>
+    <tr>
+      <td><strong>社員成長率</strong></td>
+      <td>(本期 – 前期) ÷ 前期</td>
+      <td>&gt; 0%</td>
+      <td>負數代表社員流失</td>
+    </tr>
+    <tr>
+      <td><strong>股金成長率</strong></td>
+      <td>(本期 – 前期) ÷ 前期</td>
+      <td>&gt; 0%</td>
+      <td>負數代表資金流出</td>
+    </tr>
+    <tr>
+      <td><strong>加權平均利率</strong></td>
+      <td>利息收入 ÷ 平均放款餘額</td>
+      <td>&gt; 3%</td>
+      <td>&lt;2% 放款利率偏低</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- 7. 常見問題 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="faq">
+  <h2>7. ❓ 常見問題</h2>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 為什麼我看不到「⚖️ 財報明細」？</strong>
+    <p style="margin-top:0.3rem;">A: 需要上傳 CSV 檔案（或分享連結中有包含 csv=xxx）。只有上傳 Excel 的話，只會出現「社務診斷」。</p>
+  </div>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 箭頭顏色好亂，怎麼區分好壞？</strong>
+    <p style="margin-top:0.3rem;">A: 簡單記：<strong>🔴 紅色上升 = 好事</strong>（社員、股金、收入、淨利、淨值比）；<strong>🟢 綠色上升 = 壞事</strong>（開支比、逾放比、負債比、支出）。<br>
+    所以看到紅箭頭先放心，綠箭頭要留意。</p>
+  </div>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 上傳後資料沒更新？</strong>
+    <p style="margin-top:0.3rem;">A: 系統有暫存機制，重新上傳同一個檔案可能還會看到舊資料。可以重整頁面（F5）再上傳一次。</p>
+  </div>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 風險矩陣的泡泡好擠，社名都疊在一起？</strong>
+    <p style="margin-top:0.3rem;">A: 勾選「在圖表上直接顯示社名」會顯示名稱；如果不勾，滑鼠移到泡泡上也會跳出社名。</p>
+  </div>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 趨勢圖只有一個社的線，看不到平均值？</strong>
+    <p style="margin-top:0.3rem;">A: 勾選「顯示區域平均/全台平均」，就會多一條虛線可以對照。</p>
+  </div>
+
+  <div class="card" style="margin-bottom:0.8rem;">
+    <strong>Q: 如何分享給其他人看？</strong>
+    <p style="margin-top:0.3rem;">A: 管理員上傳資料後，按側邊欄「生成分享連結」，複製網址傳給對方。對方打開連結、輸入自己的密碼就能看到資料。</p>
+  </div>
+
+  <div class="card">
+    <strong>Q: 手機上字太小 / 按鈕不好按？</strong>
+    <p style="margin-top:0.3rem;">A: 本系統已針對手機優化：字體 18px、按鈕高度 52px、側邊欄採用抽屜式設計。如果還是太小，建議橫向使用或使用平板/電腦。</p>
+  </div>
+</section>
+
+<hr>
+<p style="text-align:center;color:#94A3B8;padding:2rem 0;">
+  🏦 儲互社分析系統 — 使用者訓練手冊 v1.0
+</p>
+
+</main>
+</body>
+</html>

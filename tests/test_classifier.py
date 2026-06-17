@@ -3,31 +3,46 @@ from common.classifier import classify, classify_code
 
 THRESHOLDS = {
     "high_risk_income_ratio": 1.0,
-    "high_risk_loan_ratio":   0.1,
-    "high_risk_ovd_ratio":    0.5,
-    "liquidity_loan":         0.9,
-    "idle_loan":              0.3,
-    "stable_loan_min":        0.4,
-    "stable_loan_max":        0.8,
-    "ovd_safe_line":          0.02,
-    "high_risk_ovd":          0.1,
+    "high_risk_loan_ratio": 0.1,
+    "high_risk_ovd_ratio": 0.5,
+    "liquidity_loan": 0.9,
+    "idle_loan": 0.3,
+    "stable_loan_min": 0.4,
+    "stable_loan_max": 0.8,
+    "ovd_safe_line": 0.02,
+    "high_risk_ovd": 0.1,
 }
+
 
 def _base():
     return dict(
-        M0=100, M1=95, M2=90, M3=85,
-        S0=1000, S1=950, S2=900, S3=850,
-        R0=0.8, R1=0.8,
-        O0=50, O1=60,
-        eOvd=0.01, sOvd=0.01, eLoan=0.6, sLoan=0.65,
-        memG=0.05, shrG=0.05,
+        M0=100,
+        M1=95,
+        M2=90,
+        M3=85,
+        S0=1000,
+        S1=950,
+        S2=900,
+        S3=850,
+        R0=0.8,
+        R1=0.8,
+        O0=50,
+        O1=60,
+        eOvd=0.01,
+        sOvd=0.01,
+        eLoan=0.6,
+        sLoan=0.65,
+        memG=0.05,
+        shrG=0.05,
     )
 
 
 class TestClassify:
     def test_重點輔導_c1_c2(self):
         p = _base()
-        p.update(R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.07)  # c1 + c2 (貸放比<10%且較去年減少)
+        p.update(
+            R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.07
+        )  # c1 + c2 (貸放比<10%且較去年減少)
         status, reason = classify(p, THRESHOLDS)
         assert status == "🚨 特別關懷"
         assert "連兩年虧損" in reason
@@ -42,8 +57,16 @@ class TestClassify:
 
     def test_重點輔導_c4_c5(self):
         p = _base()
-        p.update(M0=80, M1=90, M2=100, M3=110,   # c4: 連三年社員衰退
-                 S0=80, S1=90, S2=100, S3=110)    # c5: 連三年股金衰退
+        p.update(
+            M0=80,
+            M1=90,
+            M2=100,
+            M3=110,  # c4: 連三年社員衰退
+            S0=80,
+            S1=90,
+            S2=100,
+            S3=110,
+        )  # c5: 連三年股金衰退
         status, reason = classify(p, THRESHOLDS)
         assert status == "🚨 特別關懷"
         assert "人數連三年衰退" in reason
@@ -51,8 +74,16 @@ class TestClassify:
 
     def test_邊界_僅兩年衰退不觸發c4_c5(self):
         p = _base()
-        p.update(M0=80, M1=90, M2=100, M3=100,   # 只有兩年衰退，第三年持平
-                 S0=80, S1=90, S2=100, S3=100)
+        p.update(
+            M0=80,
+            M1=90,
+            M2=100,
+            M3=100,  # 只有兩年衰退，第三年持平
+            S0=80,
+            S1=90,
+            S2=100,
+            S3=100,
+        )
         status, _ = classify(p, THRESHOLDS)
         assert status != "🚨 特別關懷"
 
@@ -64,7 +95,9 @@ class TestClassify:
 
     def test_貸放比低但較去年增加不觸發c2(self):
         p = _base()
-        p.update(R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.03)  # eLoan < 10% 但較去年增加，不觸發 c2
+        p.update(
+            R0=1.1, R1=1.1, eLoan=0.05, sLoan=0.03
+        )  # eLoan < 10% 但較去年增加，不觸發 c2
         status, _ = classify(p, THRESHOLDS)
         assert status != "🚨 特別關懷"  # 僅 c1，不足兩項
 
@@ -106,14 +139,17 @@ class TestClassify:
 
 
 class TestClassifyCode:
-    @pytest.mark.parametrize("code,expected", [
-        ("1101", "資產"),
-        ("2201", "負債"),
-        ("3101", "權益"),
-        ("4101", "收入"),
-        ("5101", "支出"),
-        ("",     "其他"),
-        ("9999", "其他"),
-    ])
+    @pytest.mark.parametrize(
+        "code,expected",
+        [
+            ("1101", "資產"),
+            ("2201", "負債"),
+            ("3101", "權益"),
+            ("4101", "收入"),
+            ("5101", "支出"),
+            ("", "其他"),
+            ("9999", "其他"),
+        ],
+    )
     def test_mapping(self, code, expected):
         assert classify_code(code) == expected

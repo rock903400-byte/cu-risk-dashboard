@@ -1,6 +1,12 @@
+import re
 import numpy as np
 import pandas as pd
 from .constants import PERCENTAGE_FIELDS
+
+_DANGEROUS_RE = re.compile(
+    r"<\s*script\b|onerror\s*=|onload\s*=|javascript:",
+    re.IGNORECASE,
+)
 
 
 def normalize_html_percentage(val, col_name):
@@ -28,6 +34,8 @@ def defensive_clean_value(val, col_name):
             return val
     except:
         pass
+    if isinstance(val, str):
+        val = _DANGEROUS_RE.sub("", val)
     if col_name in ("逾放比", "提撥率"):
         return val
     try:

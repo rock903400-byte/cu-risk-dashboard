@@ -1,8 +1,10 @@
 """
 儲互社分析系統 — 主入口
 """
+
 import sys
 from pathlib import Path
+
 _root = str(Path(__file__).resolve().parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
@@ -37,21 +39,21 @@ st.markdown(APP_CSS.format(theme_bg=CONFIG["THEME_BG"]), unsafe_allow_html=True)
 
 # ── Session State 初始化 ──────────────────────────────────
 _DEFAULTS = {
-    "logged_in":          False,
-    "role":               None,
-    "assigned_region":    None,
-    "assigned_union":     None,
-    "login_attempts":     0,
-    "locked":             False,
-    "preloaded_data":     None,   # (data, df_m, df_l, raw_bytes, region_map)
-    "preloaded_csv":      None,   # (df, raw_bytes)
+    "logged_in": False,
+    "role": None,
+    "assigned_region": None,
+    "assigned_union": None,
+    "login_attempts": 0,
+    "locked": False,
+    "preloaded_data": None,  # (data, df_m, df_l, raw_bytes, region_map)
+    "preloaded_csv": None,  # (df, raw_bytes)
     "preloaded_passwords": {},
-    "nav_selection":      "📊 社務診斷",
+    "nav_selection": "📊 社務診斷",
     "is_district_office": False,
-    "confirm_logout":     False,
-    "xl_msg":             None,
-    "csv_msg":            None,
-    "seen_color_tip":     False,
+    "confirm_logout": False,
+    "xl_msg": None,
+    "csv_msg": None,
+    "seen_color_tip": False,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -62,11 +64,13 @@ supabase = init_supabase()
 
 # ── 共享連結預載 ──────────────────────────────────────────
 shared_file = st.query_params.get("file")
-shared_csv  = st.query_params.get("csv")
+shared_csv = st.query_params.get("csv")
 
 if shared_file and st.session_state["preloaded_data"] is None:
     try:
-        raw_bytes = download_file_from_storage(supabase, CONFIG["BUCKET_NAME"], shared_file)
+        raw_bytes = download_file_from_storage(
+            supabase, CONFIG["BUCKET_NAME"], shared_file
+        )
         data, df_m, df_l, region_pws, region_map = process_excel_final(
             raw_bytes, CONFIG["THRESHOLDS"], CONFIG["SHEETS"]
         )
@@ -79,7 +83,9 @@ if shared_file and st.session_state["preloaded_data"] is None:
 
 if shared_csv and st.session_state["preloaded_csv"] is None:
     try:
-        raw_csv = download_file_from_storage(supabase, CONFIG["BUCKET_NAME"], shared_csv)
+        raw_csv = download_file_from_storage(
+            supabase, CONFIG["BUCKET_NAME"], shared_csv
+        )
         st.session_state["preloaded_csv"] = (process_csv_final(raw_csv), raw_csv)
     except Exception as e:
         logger.error(f"CSV 載入失敗: {e}")
@@ -90,7 +96,7 @@ if not st.session_state["logged_in"]:
     st.stop()
 
 # ── 資料載入與過濾 ────────────────────────────────────────
-IS_ADMIN   = (st.session_state["role"] == "admin")
+IS_ADMIN = st.session_state["role"] == "admin"
 data_loaded = False
 region_data = None
 
@@ -98,7 +104,7 @@ _pd = st.session_state["preloaded_data"]
 if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
     data, df_m, df_l, raw_bytes, region_map = _pd
     region = st.session_state["assigned_region"]
-    union  = st.session_state["assigned_union"]
+    union = st.session_state["assigned_union"]
 
     if region:
         # 取得該區域內所有實際有財報的社名
@@ -116,7 +122,7 @@ if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
                 st.stop()
             data = region_data.copy()
             st.session_state["is_district_office"] = True
-        
+
         target_snos = data["社號"].unique()
         df_m = df_m[df_m["社號"].isin(target_snos)].copy()
         df_l = df_l[df_l["社號"].isin(target_snos)].copy()
@@ -129,7 +135,7 @@ if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
 
 if st.session_state["preloaded_csv"]:
     df_csv_full, raw_csv_bytes = st.session_state["preloaded_csv"]
-    union  = st.session_state["assigned_union"]
+    union = st.session_state["assigned_union"]
     region = st.session_state["assigned_region"]
     is_dist = st.session_state.get("is_district_office", False)
 
@@ -148,9 +154,15 @@ if st.session_state["preloaded_csv"]:
 # ── 管理員側邊欄 ──────────────────────────────────────────
 if IS_ADMIN:
     with st.sidebar:
-        st.markdown('<span class="sidebar-label">📂 資料匯入</span>', unsafe_allow_html=True)
-        uploaded_xl  = st.file_uploader("Excel (風險診斷)", type=["xlsx"], label_visibility="collapsed")
-        uploaded_csv = st.file_uploader("CSV (財務明細)",  type=["csv"],  label_visibility="collapsed")
+        st.markdown(
+            '<span class="sidebar-label">📂 資料匯入</span>', unsafe_allow_html=True
+        )
+        uploaded_xl = st.file_uploader(
+            "Excel (風險診斷)", type=["xlsx"], label_visibility="collapsed"
+        )
+        uploaded_csv = st.file_uploader(
+            "CSV (財務明細)", type=["csv"], label_visibility="collapsed"
+        )
 
         if uploaded_xl:
             try:
@@ -163,7 +175,10 @@ if IS_ADMIN:
                     preloaded_data=(data, df_m, df_l, raw_bytes, region_map),
                 )
                 data_loaded = True
-                st.session_state["xl_msg"] = ("success", "✅ Excel 解析成功，資料已載入。")
+                st.session_state["xl_msg"] = (
+                    "success",
+                    "✅ Excel 解析成功，資料已載入。",
+                )
             except Exception as e:
                 st.session_state["xl_msg"] = ("error", f"❌ Excel 解析失敗：{e}")
 
@@ -180,7 +195,10 @@ if IS_ADMIN:
                 df_csv = process_csv_final(raw_csv_bytes)
                 st.session_state["preloaded_csv"] = (df_csv, raw_csv_bytes)
                 data_loaded = True
-                st.session_state["csv_msg"] = ("success", "✅ CSV 解析成功，資料已載入。")
+                st.session_state["csv_msg"] = (
+                    "success",
+                    "✅ CSV 解析成功，資料已載入。",
+                )
             except Exception as e:
                 st.session_state["csv_msg"] = ("error", f"❌ CSV 解析失敗：{e}")
 
@@ -193,7 +211,9 @@ if IS_ADMIN:
 
         if st.session_state["preloaded_data"] or st.session_state["preloaded_csv"]:
             st.markdown("<hr>", unsafe_allow_html=True)
-            st.markdown('<span class="sidebar-label">🔗 分享功能</span>', unsafe_allow_html=True)
+            st.markdown(
+                '<span class="sidebar-label">🔗 分享功能</span>', unsafe_allow_html=True
+            )
             if st.button("🚀 生成分享連結", use_container_width=True):
                 if not supabase:
                     st.error("❌ 雲端服務未設定，無法產生分享連結。")
@@ -202,14 +222,18 @@ if IS_ADMIN:
                     if st.session_state["preloaded_data"]:
                         f_xl = f"xl_{uuid.uuid4().hex[:8]}.xlsx"
                         supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
-                            f_xl, st.session_state["preloaded_data"][3],
-                            file_options={"content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+                            f_xl,
+                            st.session_state["preloaded_data"][3],
+                            file_options={
+                                "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            },
                         )
                         params.append(f"file={f_xl}")
                     if st.session_state["preloaded_csv"]:
                         f_csv = f"csv_{uuid.uuid4().hex[:8]}.csv"
                         supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
-                            f_csv, st.session_state["preloaded_csv"][1],
+                            f_csv,
+                            st.session_state["preloaded_csv"][1],
                             file_options={"content-type": "text/csv"},
                         )
                         params.append(f"csv={f_csv}")
@@ -247,13 +271,14 @@ if "儲互社" in disp_title:
 else:
     display_text = f"{disp_title} 儲互社分析系統"
 
-st.markdown(f"<h1 class='responsive-h1'>📊 {display_text}</h1>",
-            unsafe_allow_html=True)
+st.markdown(f"<h1 class='responsive-h1'>📊 {display_text}</h1>", unsafe_allow_html=True)
 
 # ── 導覽側邊欄 ────────────────────────────────────────────
 with st.sidebar:
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown('<span class="sidebar-label">🧭 系統導覽</span>', unsafe_allow_html=True)
+    st.markdown(
+        '<span class="sidebar-label">🧭 系統導覽</span>', unsafe_allow_html=True
+    )
 
     nav_options = []
     if st.session_state["preloaded_data"]:
@@ -267,17 +292,22 @@ with st.sidebar:
         st.session_state["nav_selection"] = nav_options[0]
 
     st.session_state["nav_selection"] = st.radio(
-        "選擇功能模組", nav_options,
+        "選擇功能模組",
+        nav_options,
         label_visibility="collapsed",
         index=nav_options.index(st.session_state["nav_selection"]),
     )
 
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown('<span class="sidebar-label">👤 帳號權限</span>', unsafe_allow_html=True)
+    st.markdown(
+        '<span class="sidebar-label">👤 帳號權限</span>', unsafe_allow_html=True
+    )
     if IS_ADMIN:
         badge_cls, badge_txt = "badge-admin", "🔑 管理員模式"
     else:
-        disp_name = st.session_state["assigned_union"] or st.session_state["assigned_region"]
+        disp_name = (
+            st.session_state["assigned_union"] or st.session_state["assigned_region"]
+        )
         badge_cls, badge_txt = "badge-viewer", f"👁️ 訪客：{disp_name}"
     st.markdown(f'<div class="{badge_cls}">{badge_txt}</div>', unsafe_allow_html=True)
     if not st.session_state["confirm_logout"]:
@@ -298,9 +328,13 @@ with st.sidebar:
 # ── 頁面路由 ──────────────────────────────────────────────
 if st.session_state["nav_selection"] == "📊 社務診斷":
     render_overview_page(
-        data, df_m, df_l, region_data, CONFIG,
+        data,
+        df_m,
+        df_l,
+        region_data,
+        CONFIG,
         assigned_union=st.session_state.get("assigned_union"),
-        is_district_office=st.session_state.get("is_district_office", False)
+        is_district_office=st.session_state.get("is_district_office", False),
     )
 
 elif st.session_state["nav_selection"] == "⚖️ 財報明細":

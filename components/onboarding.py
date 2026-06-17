@@ -1,6 +1,7 @@
 """
 Onboarding 引導元件 — 給第一次使用或沒有資料時的引導畫面。
 """
+
 from typing import Optional
 
 import streamlit as st
@@ -201,7 +202,9 @@ def maybe_show_first_time_tip() -> None:
 
     col_a, col_b = st.columns([1, 5])
     with col_a:
-        if st.button("✅ 知道了,以後不再顯示", key="dismiss_tip", use_container_width=True):
+        if st.button(
+            "✅ 知道了,以後不再顯示", key="dismiss_tip", use_container_width=True
+        ):
             st.session_state["seen_color_tip"] = True
             st.rerun()
     with col_b:

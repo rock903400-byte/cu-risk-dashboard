@@ -2,9 +2,11 @@
 以真人視角跑過 5 個情境,記錄使用者實際看到的內容。
 執行: python tests/manual_human_journey.py
 """
+
 import sys
 import io
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Force UTF-8 stdout (Windows cp950 can't print emoji)
@@ -41,7 +43,7 @@ def snapshot(label, at):
         print(f"     - {m.value[:100]}")
     print(f"   [markdown]  數: {len(at.markdown)}")
     for i, m in enumerate(at.markdown[:5]):
-        body = m.value.replace('\n', ' ')[:150]
+        body = m.value.replace("\n", " ")[:150]
         print(f"     [{i}] {body}")
     if len(at.markdown) > 5:
         print(f"     ... +{len(at.markdown) - 5} more")

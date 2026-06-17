@@ -1,8 +1,10 @@
 """
 全域配置與常數
 """
+
 import sys
 from pathlib import Path
+
 _root = str(Path(__file__).resolve().parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
@@ -14,23 +16,30 @@ from common.thresholds import DEFAULT_THRESHOLDS, load_thresholds
 
 
 class ThresholdsConfig(BaseModel):
-    high_risk_ovd:          float
-    liquidity_loan:         float
-    idle_loan:              float
-    stable_loan_min:        float
-    stable_loan_max:        float
-    ovd_safe_line:          float
+    high_risk_ovd: float
+    liquidity_loan: float
+    idle_loan: float
+    stable_loan_min: float
+    stable_loan_max: float
+    ovd_safe_line: float
     high_risk_income_ratio: float
-    high_risk_loan_ratio:   float
-    high_risk_ovd_ratio:    float
-    savings_good:           float
-    provision_good:         float
+    high_risk_loan_ratio: float
+    high_risk_ovd_ratio: float
+    savings_good: float
+    provision_good: float
 
     @field_validator(
-        "high_risk_ovd", "liquidity_loan", "idle_loan",
-        "stable_loan_min", "stable_loan_max", "ovd_safe_line",
-        "high_risk_income_ratio", "high_risk_loan_ratio", "high_risk_ovd_ratio",
-        "savings_good", "provision_good",
+        "high_risk_ovd",
+        "liquidity_loan",
+        "idle_loan",
+        "stable_loan_min",
+        "stable_loan_max",
+        "ovd_safe_line",
+        "high_risk_income_ratio",
+        "high_risk_loan_ratio",
+        "high_risk_ovd_ratio",
+        "savings_good",
+        "provision_good",
     )
     @classmethod
     def must_be_positive(cls, v: float) -> float:
@@ -41,9 +50,10 @@ class ThresholdsConfig(BaseModel):
 
 ACCOUNT_CODES = {
     "shares": "3101",
-    "loans":  "1311",
+    "loans": "1311",
     "profit": "3319",
 }
+
 
 def safe_secrets():
     try:
@@ -55,19 +65,21 @@ def safe_secrets():
 def get_config():
     _secrets = safe_secrets()
     raw = {
-        "BUCKET_NAME":  _secrets.get("BUCKET_NAME", "excel-reports"),
+        "BUCKET_NAME": _secrets.get("BUCKET_NAME", "excel-reports"),
         "APP_BASE_URL": "https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app",
         "MAX_ATTEMPTS": 5,
-        "THEME_BG":     "#F0F4F8",
+        "THEME_BG": "#F0F4F8",
         "SHEETS": {
-            "MAIN":   "社務及資金運用情形",
-            "LOAN":   "放款及逾期放款",
+            "MAIN": "社務及資金運用情形",
+            "LOAN": "放款及逾期放款",
             "REGION": "區域分類表",
         },
         "THRESHOLDS": load_thresholds(_secrets),
     }
     ThresholdsConfig(**raw["THRESHOLDS"])
     return raw
+
+
 APP_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap');

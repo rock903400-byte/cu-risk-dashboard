@@ -12,7 +12,9 @@ def init_supabase() -> Client | None:
     try:
         _secrets = safe_secrets()
         if "supabase" in _secrets:
-            return create_client(_secrets["supabase"]["url"], _secrets["supabase"]["key"])
+            return create_client(
+                _secrets["supabase"]["url"], _secrets["supabase"]["key"]
+            )
     except Exception as e:
         logger.warning(f"Supabase 初始化失敗: {e}")
     return None

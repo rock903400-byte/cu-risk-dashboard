@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>儲蓄互助社分析系統 — 指標介紹與改善指引</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+    background: #f5f7fa; color: #1a1a2e; line-height: 1.7;
+  }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── header ── */
+  header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff; padding: 3rem 1.5rem; text-align: center;
+  }
+  header h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: 1px; }
+  header p { margin-top: .6rem; font-size: 1.05rem; opacity: .85; }
+  header .badge {
+    display: inline-block; margin-top: 1rem; padding: .3rem 1rem;
+    background: rgba(255,255,255,.15); border-radius: 999px;
+    font-size: .85rem; backdrop-filter: blur(4px);
+  }
+
+  /* ── nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(26,26,46,.92); backdrop-filter: blur(8px);
+    padding: 0 1.5rem; overflow-x: auto; white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  nav a {
+    display: inline-block; color: #ccc; padding: .8rem 1rem;
+    font-size: .9rem; transition: color .2s, border .2s;
+    border-bottom: 2px solid transparent;
+  }
+  nav a:hover, nav a.active { color: #fff; text-decoration: none; border-color: #60a5fa; }
+
+  /* ── layout ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  section { margin-bottom: 3.5rem; }
+  h2 {
+    font-size: 1.6rem; font-weight: 700; margin-bottom: 1.2rem;
+    padding-bottom: .4rem; border-bottom: 3px solid #2563eb;
+    display: inline-block;
+  }
+  h3 {
+    font-size: 1.2rem; font-weight: 600; margin: 1.5rem 0 .6rem;
+    color: #0f3460;
+  }
+  h4 { font-size: 1.05rem; font-weight: 600; margin: 1rem 0 .4rem; }
+
+  /* ── card / table ── */
+  .card {
+    background: #fff; border-radius: 12px; padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 1.2rem;
+  }
+  .card p { margin-bottom: .6rem; }
+  .card p:last-child { margin-bottom: 0; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 1rem 0;
+    font-size: .92rem;
+  }
+  th, td {
+    text-align: left; padding: .65rem .8rem; border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  th {
+    background: #f0f4ff; font-weight: 600; color: #0f3460;
+    position: sticky; top: 42px;
+  }
+  tr:hover td { background: #fafbff; }
+
+  .tag {
+    display: inline-block; font-size: .75rem; font-weight: 600;
+    padding: .15rem .55rem; border-radius: 999px; margin-right: .3rem;
+  }
+  .tag-green  { background: #dcfce7; color: #166534; }
+  .tag-yellow { background: #fef9c3; color: #854d0e; }
+  .tag-red    { background: #fee2e2; color: #991b1b; }
+  .tag-blue   { background: #dbeafe; color: #1e40af; }
+  .tag-gray   { background: #f3f4f6; color: #374151; }
+
+  .kpi { font-size: 1.4rem; font-weight: 700; color: #0f3460; }
+
+  .improve-box {
+    background: #f0fdf4; border-left: 4px solid #22c55e;
+    padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: .6rem 0;
+  }
+  .improve-box strong { color: #166534; }
+
+  .footnote { font-size: .85rem; color: #6b7280; margin-top: .3rem; }
+
+  /* ── risk legend ── */
+  .risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: .6rem; margin: 1rem 0; }
+  .risk-item {
+    padding: .8rem 1rem; border-radius: 8px; font-weight: 500;
+    border: 1px solid #e5e7eb;
+  }
+  .risk-special { background: #fef2f2; border-color: #fca5a5; }
+  .risk-liquid  { background: #fff7ed; border-color: #fdba74; }
+  .risk-idle    { background: #f0f9ff; border-color: #7dd3fc; }
+  .risk-stable  { background: #f0fdf4; border-color: #86efac; }
+  .risk-normal  { background: #f9fafb; border-color: #d1d5db; }
+
+  /* ── responsive ── */
+  @media (max-width: 640px) {
+    header h1 { font-size: 1.5rem; }
+    nav a { padding: .6rem .7rem; font-size: .82rem; }
+    .container { padding: 1.2rem 1rem 3rem; }
+    table { font-size: .82rem; }
+    th, td { padding: .45rem .5rem; }
+    h2 { font-size: 1.3rem; }
+    .kpi { font-size: 1.1rem; }
+  }
+
+  /* ── print ── */
+  @media print {
+    nav { display: none; }
+    header { padding: 1.5rem; }
+    .container { max-width: 100%; }
+    table th { background: #eee; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header>
+  <h1>儲蓄互助社分析系統</h1>
+  <p>風險診斷 × 財務戰情室 × 經營總覽</p>
+  <span class="badge">CU-Analysis-v1 · Streamlit Cloud</span>
+</header>
+
+<!-- ==================== NAV ==================== -->
+<nav>
+  <a href="#intro">系統簡介</a>
+  <a href="#pipeline">資料流程</a>
+  <a href="#risk-status">風險狀態</a>
+  <a href="#indicators">完整指標</a>
+  <a href="#improve">改善指引</a>
+  <a href="#thresholds">門檻值</a>
+</nav>
+
+<div class="container">
+
+<!-- ==================== 系統簡介 ==================== -->
+<section id="intro">
+  <h2>📋 系統簡介</h2>
+  <div class="card">
+    <p><strong>儲蓄互助社分析系統</strong> 是專為台灣 <strong>儲蓄互助社（Credit Union）</strong> 打造的風險管理與財務分析平台。系統以高齡長輩為目標使用者，設計上採用大字型、高對比、防誤觸等無障礙原則。</p>
+    <p style="margin-top:.6rem;">部署於 <strong>Streamlit Cloud</strong>，自動從 GitHub 更新，無需手動部署。</p>
+    <p style="margin-top:.6rem;">👉 線上系統：<a href="https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app" target="_blank">cu-analysis-v1.streamlit.app</a></p>
+  </div>
+
+  <h3>使用者角色</h3>
+  <table>
+    <tr><th>角色</th><th>可見範圍</th><th>說明</th></tr>
+    <tr><td>🔐 Admin</td><td>全台所有資料</td><td>管理者，可查看所有儲蓄互助社的完整資料</td></tr>
+    <tr><td>📌 區會</td><td>所屬區域內所有社</td><td>區域性管理者，僅見轄區內資料</td></tr>
+    <tr><td>🏦 個社</td><td>僅自身資料</td><td>一般社員單位，只看自己社團的資料</td></tr>
+  </table>
+
+  <h3>主要功能（5 大標籤頁）</h3>
+  <table>
+    <tr><th>標籤</th><th>名稱</th><th>內容</th></tr>
+    <tr><td>📊</td><td>經營總覽</td><td>4 項核心指標（社員、股金、開支比、逾放比）＋ 四色狀態雷達卡</td></tr>
+    <tr><td>🎯</td><td>風險矩陣</td><td>泡泡散佈圖 ＋ 四象限色塊，快速識別高風險社</td></tr>
+    <tr><td>🏥</td><td>個社健檢</td><td>單社指標對比柱狀圖 ＋ 6 個小趨勢圖</td></tr>
+    <tr><td>📋</td><td>報表匯出</td><td>可下載 CSV 分析報表</td></tr>
+    <tr><td>📈</td><td>趨勢追蹤</td><td>6 項時間序列（含區域／全台平均比較）</td></tr>
+  </table>
+  <p class="footnote">另含財務戰情室（War Room），含資產負債表、綜合損益表、年度概覽、深度分析、財務診斷、原始資料共 6 標籤。</p>
+</section>
+
+<!-- ==================== 資料流程 ==================== -->
+<section id="pipeline">
+  <h2>🔁 資料流程</h2>
+  <div class="card">
+    <p>系統有 <strong>兩條獨立 pipeline</strong>，分別處理不同來源的數據：</p>
+    <div style="background:#f0f4ff; border-radius:10px; padding:1rem; margin-top:.8rem;">
+      <p><strong style="color:#2563eb;">① Excel  Pipeline（風險診斷）</strong></p>
+      <p style="font-size:.9rem;">上傳 Excel（社務＋放款＋區域表） → <code>process_excel_final()</code> → 經營總覽、風險矩陣、個社健檢、趨勢追蹤</p>
+    </div>
+    <div style="background:#f0fdf4; border-radius:10px; padding:1rem; margin-top:.6rem;">
+      <p><strong style="color:#22c55e;">② CSV  Pipeline（財務戰情室）</strong></p>
+      <p style="font-size:.9rem;">上傳 CSV（PR019 會計科目） → <code>process_csv_final()</code> → 資產負債表、損益表、財務診斷</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 風險狀態 ==================== -->
+<section id="risk-status">
+  <h2>🚦 風險狀態分類</h2>
+  <p>系統根據 <strong>5 項特別關懷條件</strong> 與多項財務指標，將每個儲蓄互助社歸類為以下狀態：</p>
+
+  <div class="risk-grid">
+    <div class="risk-item risk-special">🚨 特別關懷<br><span style="font-weight:400;font-size:.82rem;">5 項條件中觸發 ≥ 2 項</span></div>
+    <div class="risk-item risk-liquid">⚠️ 流動性緊繃<br><span style="font-weight:400;font-size:.82rem;">貸放比 &gt; 90% 且股金衰退</span></div>
+    <div class="risk-item risk-idle">💤 資金閒置<br><span style="font-weight:400;font-size:.82rem;">貸放比 &lt; 30% 且逾放比 &lt; 2%</span></div>
+    <div class="risk-item risk-stable">✅ 穩健模範<br><span style="font-weight:400;font-size:.82rem;">社員／股金均成長，貸放比 40%-80%，逾放比 &lt; 2%</span></div>
+    <div class="risk-item risk-normal">📊 一般狀態<br><span style="font-weight:400;font-size:.82rem;">不符合上述任一特殊狀態</span></div>
+  </div>
+
+  <h3>🚨 特別關懷 — 5 項判斷條件（2/5 原則）</h3>
+  <table>
+    <tr><th>#</th><th>條件</th><th>判斷邏輯</th></tr>
+    <tr><td>c1</td><td><strong>連兩年虧損</strong></td><td>開支比連續兩年底 &gt; 100%（支出大於收入）</td></tr>
+    <tr><td>c2</td><td><strong>貸放比過低</strong></td><td>貸放比 &lt; 10% 且較去年減少（資金嚴重閒置且惡化）</td></tr>
+    <tr><td>c3</td><td><strong>高逾放且惡化</strong></td><td>逾放比 &gt; 50% 且當年逾期金額 > 去年（放款品質極差且惡化）</td></tr>
+    <tr><td>c4</td><td><strong>人數連三年衰退</strong></td><td>社員數連續三年下降（經營動能持續流失）</td></tr>
+    <tr><td>c5</td><td><strong>股金連三年衰退</strong></td><td>股金連續三年下降（資金基礎持續萎縮）</td></tr>
+  </table>
+</section>
+
+<!-- ==================== 完整指標 ==================== -->
+<section id="indicators">
+  <h2>📊 完整指標列表</h2>
+  <p style="margin-bottom:1rem;">以下為系統中使用的所有指標，分為 <strong>Excel 風險診斷指標</strong> 與 <strong>CSV 財務診斷指標</strong> 兩大類。</p>
+
+  <!-- ─────────────── 經營總覽 4 卡 ─────────────── -->
+  <h3>A. 經營總覽核心 4 指標（Overview）</h3>
+  <table>
+    <tr><th>指標</th><th>英文名稱</th><th>業務意義</th><th>計算方式</th></tr>
+    <tr>
+      <td><strong>社員總數</strong></td><td>Total Members</td>
+      <td>社團的社員／會員總人數，反映社團規模與影響力</td>
+      <td><code>avg_src["現有社員"].sum()</code></td>
+    </tr>
+    <tr>
+      <td><strong>股金總額</strong></td><td>Total Shares</td>
+      <td>社員繳納的股金總金額，反映社團資金池規模</td>
+      <td><code>avg_src["現有股金"].sum()</code>，以億元／萬元顯示</td>
+    </tr>
+    <tr>
+      <td><strong>開支比</strong></td><td>Expense Ratio</td>
+      <td>總支出佔總收入的比例。<span class="tag tag-red">&gt; 100%</span> 代表虧損</td>
+      <td>年底 12 月快照的開支比（原「收支比」rename）</td>
+    </tr>
+    <tr>
+      <td><strong>逾放比</strong></td><td>NPL Ratio</td>
+      <td>逾期放款佔總放款比例，越高代表放款品質越差</td>
+      <td><code>df_l["逾放比"]</code> 取最新值</td>
+    </tr>
+  </table>
+
+  <!-- ─────────────── Excel 風險診斷 ─────────────── -->
+  <h3>B. 風險診斷輔助指標（Excel Pipeline）</h3>
+  <table>
+    <tr><th>指標</th><th>業務意義</th><th>計算方式</th></tr>
+    <tr>
+      <td><strong>貸放比</strong></td><td>放款總額佔股金的比率。衡量資金運用效率，過低（&lt; 30%）表示資金閒置，過高（&gt; 90%）有流動性風險</td>
+      <td><code>df_m["貸放比"]</code></td>
+    </tr>
+    <tr>
+      <td><strong>儲蓄率</strong></td><td>社員儲蓄相對於收入的比率，反映社員儲蓄習慣</td>
+      <td><code>df_m["儲蓄率"]</code>，經防禦性清洗（> 1.0 則 ÷100）</td>
+    </tr>
+    <tr>
+      <td><strong>社員成長率</strong></td><td>過去 12 個月社員人數的年增率，反映社團擴張或萎縮</td>
+      <td><code>(curr_M − M₀) / M₀</code></td>
+    </tr>
+    <tr>
+      <td><strong>股金成長率</strong></td><td>過去 12 個月股金總額的年增率，反映資金動能</td>
+      <td><code>(curr_S − S₀) / S₀</code></td>
+    </tr>
+    <tr>
+      <td><strong>提撥率</strong></td><td>備抵呆帳提撥率，越高代表風險準備越充足</td>
+      <td><code>df_l["提撥率"]</code>，若不存在則為 0</td>
+    </tr>
+  </table>
+
+  <!-- ─────────────── CSV 財務診斷 ─────────────── -->
+  <h3>C. 財務診斷指標（CSV Pipeline）</h3>
+  <table>
+    <tr><th>指標</th><th>業務意義</th><th>計算方式</th></tr>
+    <tr>
+      <td><strong>負債比</strong><br><span class="tag tag-blue">財務結構</span></td>
+      <td>總負債 ÷ 總資產。越高代表負債越重，風險越高</td>
+      <td>代碼 2xx ÷ 代碼 1xx</td>
+    </tr>
+    <tr>
+      <td><strong>淨值比</strong><br><span class="tag tag-blue">財務結構</span></td>
+      <td>淨值（權益）÷ 總資產。越高代表自有資金越充足</td>
+      <td>代碼 3xx ÷ 代碼 1xx</td>
+    </tr>
+    <tr>
+      <td><strong>開支比</strong><br><span class="tag tag-yellow">獲利能力</span></td>
+      <td>總支出 ÷ 總收入。> 100% 表示本業虧損</td>
+      <td>代碼 5xx ÷ 代碼 4xx</td>
+    </tr>
+    <tr>
+      <td><strong>本期損益</strong><br><span class="tag tag-yellow">獲利能力</span></td>
+      <td>總收入 − 總支出。正數為盈餘，負數為虧損</td>
+      <td>∑4xx − ∑5xx</td>
+    </tr>
+    <tr>
+      <td><strong>加權平均利率</strong><br><span class="tag tag-yellow">獲利能力</span></td>
+      <td>放款的平均利率水準，越高代表資金運用效益越好</td>
+      <td>410x 利息收入年總和 ÷ 131x 放款餘額月均值</td>
+    </tr>
+    <tr>
+      <td><strong>年度總收入</strong><br><span class="tag tag-gray">KPI</span></td>
+      <td>全年度收入總額，反映營運規模</td>
+      <td>代碼 4xx 科目全年總和</td>
+    </tr>
+    <tr>
+      <td><strong>年度總支出</strong><br><span class="tag tag-gray">KPI</span></td>
+      <td>全年度支出總額，反映成本控制能力</td>
+      <td>代碼 5xx 科目全年總和</td>
+    </tr>
+  </table>
+
+  <!-- ─────────────── 紅綠燈語意 ─────────────── -->
+  <h3>D. 股市紅綠燈邏輯</h3>
+  <p>系統中的 metric 箭頭顏色（▲ 漲 ▼ 跌）依業務意義有不同的好壞定義：</p>
+  <table>
+    <tr><th>指標</th><th>▲ 紅漲 =</th><th>▼ 綠跌 =</th></tr>
+    <tr><td>社員總數、股金總額、總收入、本期損益、淨值比、加權平均利率</td>
+        <td><span class="tag tag-red">好（成長）</span></td>
+        <td><span class="tag tag-green">壞（衰退）</span></td></tr>
+    <tr><td>開支比、逾放比、負債比、總支出</td>
+        <td><span class="tag tag-red">壞（惡化）</span></td>
+        <td><span class="tag tag-green">好（改善）</span></td></tr>
+  </table>
+  <p class="footnote">原則：紅漲=好（社員成長、股金增、收入增、淨利增、淨值比增）；綠漲=壞（開支比升、逾放比升、負債比升、支出增）。</p>
+</section>
+
+<!-- ==================== 改善指引 ==================== -->
+<section id="improve">
+  <h2>📈 改善指標指引</h2>
+  <p>以下針對各項核心指標提供 <strong>實務改善建議</strong>，分為「改善目標」與「具體行動」：</p>
+
+  <!-- ── 1. 社員總數 ── -->
+  <div class="card">
+    <h4>👥 社員總數</h4>
+    <p><span class="tag tag-green">目標</span> 持續成長，避免連三年衰退（c4 紅線）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>招募新社員：</strong>在社區舉辦說明會，強調儲蓄互助社的優點（較高存款利率、較低借款利率）</li>
+        <li><strong>會員推薦計畫：</strong>鼓勵現有社員介紹新社員，提供小額回饋或優先服務</li>
+        <li><strong>數位化服務：</strong>導入線上開戶、行動支付等便利功能，吸引年輕族群</li>
+        <li><strong>異業合作：</strong>與在地商家、農會、學校合作推廣</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 2. 股金總額 ── -->
+  <div class="card">
+    <h4>💰 股金總額</h4>
+    <p><span class="tag tag-green">目標</span> 穩定成長，避免連三年衰退（c5 紅線）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>提高股金利率：</strong>適度調升股金配息率，增強社員增持股金意願</li>
+        <li><strong>定期定額方案：</strong>推出每月自動轉存股金計畫，降低社員心理負擔</li>
+        <li><strong>專案型增資：</strong>配合社務發展計畫（如購置辦公廳舍）推出限時增資專案</li>
+        <li><strong>教育宣導：</strong>讓社員了解股金是穩健的儲蓄工具，且享有盈餘分配</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 3. 開支比 ── -->
+  <div class="card">
+    <h4>📉 開支比（收支比）</h4>
+    <p><span class="tag tag-green">目標</span> ≤ 95%（綠燈），避免 > 100%（連兩年即 c1 紅線）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>成本控管：</strong>檢討人事費用、業務費、交際費等開銷，刪減非必要支出</li>
+        <li><strong>提升收入：</strong>提高放款利率或拓展手續費收入來源</li>
+        <li><strong>數位轉型：</strong>導入自動化系統降低行政成本</li>
+        <li><strong>集中採購：</strong>聯合其他互助社進行集中採購（如保險、軟體服務），降低單位成本</li>
+        <li><strong>預算管理：</strong>建立年度預算制度，按月追蹤執行率</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 4. 逾放比 ── -->
+  <div class="card">
+    <h4>⚠️ 逾放比（NPL 比率）</h4>
+    <p><span class="tag tag-green">目標</span> &lt; 2%（綠燈），避免 &gt; 50%（即 c3 紅線）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>強化徵信審查：</strong>放款前落實 5P 原則（借款人、資金用途、還款來源、債權確保、展望），嚴審還款能力</li>
+        <li><strong>貸後管理：</strong>建立逾期預警系統，對接近到期日或繳款異常案件提前介入</li>
+        <li><strong>積極催收：</strong>逾期案件分級處理，早期以提醒通知為主，中期啟動協商機制，後期依法追償</li>
+        <li><strong>擔保品管理：</strong>確保放款有足額擔保，定期重新鑑價</li>
+        <li><strong>債務協商：</strong>對有誠意還款但暫時困難的社員，提供展延、降息或分期方案</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 5. 貸放比 ── -->
+  <div class="card">
+    <h4>🏦 貸放比</h4>
+    <p><span class="tag tag-green">目標</span> 40% – 80%（穩健區間），避免 &lt; 10%（c2 紅線）或 &gt; 90%（流動性緊繃）</p>
+    <div class="improve-box">
+      <strong>若過低（&lt; 40%）：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li>積極推廣放款業務，簡化申請流程</li>
+        <li>開發新放款商品（如綠能貸款、教育貸款）</li>
+        <li>調降放款利率以增加競爭力</li>
+      </ul>
+      <strong>若過高（&gt; 80%）：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li>適度收緊放款條件，控制新放款成長</li>
+        <li>鼓勵社員增持股金，擴大資金池分母</li>
+        <li>保留適量流動性準備以因應緊急提兌</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 6. 儲蓄率 ── -->
+  <div class="card">
+    <h4>🏦 儲蓄率</h4>
+    <p><span class="tag tag-green">目標</span> ≥ 60%（良好基準）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>提升儲蓄誘因：</strong>提供階梯式利率，存款愈高、利率愈佳</li>
+        <li><strong>自動儲蓄機制：</strong>推廣從薪資帳戶自動轉存，養成規律儲蓄習慣</li>
+        <li><strong>理財教育：</strong>舉辦財務規劃講座，幫助社員建立儲蓄觀念</li>
+        <li><strong>目標導向儲蓄：</strong>設計「子女教育基金」「退休準備金」等專案儲蓄計畫</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 7. 社員成長率、股金成長率 ── -->
+  <div class="card">
+    <h4>📈 社員成長率 &amp; 股金成長率</h4>
+    <p><span class="tag tag-green">目標</span> 正成長，避免連續衰退</p>
+    <div class="improve-box">
+      <strong>改善方法（共同策略）：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li>提升服務品質與社員滿意度，降低流失率</li>
+        <li>推動數位服務（行動 App、線上交易），增加便利性</li>
+        <li>設計彈性入股方案，降低新社員加入門檻</li>
+        <li>定期辦理社員大會與聯誼活動，增強凝聚力</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 8. 提撥率 ── -->
+  <div class="card">
+    <h4>🛡️ 提撥率</h4>
+    <p><span class="tag tag-green">目標</span> ≥ 1%（良好基準），越高越穩健</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li>依法令規定足額提撥備抵呆帳</li>
+        <li>定期評估放款組合的信用風險，適度增提準備</li>
+        <li>將提撥率納入年度盈餘分配的優先項目</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 9. 負債比 / 淨值比 ── -->
+  <div class="card">
+    <h4>⚖️ 負債比 &amp; 淨值比</h4>
+    <p><span class="tag tag-green">目標</span> 負債比 ≤ 80%（綠燈）／ 淨值比 ≥ 20%（綠燈）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>降低負債：</strong>減少外部借款，以增進股金取代高成本的負債融資</li>
+        <li><strong>增加淨值：</strong>保留盈餘、辦理增資，強化資本結構</li>
+        <li><strong>資產活化：</strong>處分非核心或低收益資產，償還負債</li>
+        <li><strong>財務紀律：</strong>訂定目標負債比上限，作為經營管理 KPI</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 10. 加權平均利率 ── -->
+  <div class="card">
+    <h4>📊 加權平均利率</h4>
+    <p><span class="tag tag-green">目標</span> ≥ 3%（綠燈），避免 &lt; 2%（紅燈）</p>
+    <div class="improve-box">
+      <strong>改善方法：</strong>
+      <ul style="margin: .4rem 0 0 1.2rem;">
+        <li><strong>放款訂價優化：</strong>依社員信用評等實施差異化利率，風險較高者適用較高利率</li>
+        <li><strong>調整放款組合：</strong>提高高收益放款（如小額信用貸款）的佔比</li>
+        <li><strong>降低資金成本：</strong>以較低利率吸收股金，維持利差</li>
+        <li><strong>活化閒置資金：</strong>將過剩流動性用於較高收益的運用（如購買政府公債）</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 門檻值 ==================== -->
+<section id="thresholds">
+  <h2>⚙️ 門檻值總表</h2>
+  <p>系統使用以下門檻值進行風險分類與燈號判斷，部分可透過 <code>st.secrets["thresholds"]</code> 覆蓋：</p>
+
+  <h3>風險狀態門檻</h3>
+  <table>
+    <tr><th>門檻</th><th>預設值</th><th>用途</th></tr>
+    <tr><td>高風險逾放線</td><td><span class="tag tag-red">10%</span></td><td>風險矩陣圖水平紅色虛線</td></tr>
+    <tr><td>流動性緊繃貸放比</td><td><span class="tag tag-red">90%</span></td><td>⚠️ 流動性緊繃條件</td></tr>
+    <tr><td>資金閒置貸放比上限</td><td><span class="tag tag-blue">30%</span></td><td>💤 資金閒置條件</td></tr>
+    <tr><td>穩健貸放比區間</td><td><span class="tag tag-green">40% – 80%</span></td><td>✅ 穩健模範條件</td></tr>
+    <tr><td>安全逾放線</td><td><span class="tag tag-green">2%</span></td><td>💤 ✅ 共同條件</td></tr>
+    <tr><td>高風險開支比</td><td><span class="tag tag-red">100%</span></td><td>c1 連兩年虧損判斷</td></tr>
+    <tr><td>高風險貸放比下限</td><td><span class="tag tag-red">10%</span></td><td>c2 貸放比過低判斷</td></tr>
+    <tr><td>高風險逾放比閾值</td><td><span class="tag tag-red">50%</span></td><td>c3 高逾放且惡化判斷</td></tr>
+  </table>
+
+  <h3>財務診斷燈號門檻</h3>
+  <table>
+    <tr><th>指標</th><th>🔴 紅燈</th><th>🟡 黃燈</th><th>🟢 綠燈</th></tr>
+    <tr><td>負債比</td><td>&gt; 90%</td><td>80% – 90%</td><td>≤ 80%</td></tr>
+    <tr><td>淨值比</td><td>&lt; 10%</td><td>10% – 20%</td><td>≥ 20%</td></tr>
+    <tr><td>開支比</td><td>&gt; 105%</td><td>95% – 105%</td><td>≤ 95%</td></tr>
+    <tr><td>加權平均利率</td><td>&lt; 2%</td><td>2% – 3%</td><td>≥ 3%</td></tr>
+  </table>
+
+  <h3>YoY 異常偵測門檻</h3>
+  <table>
+    <tr><th>參數</th><th>預設值</th><th>說明</th></tr>
+    <tr><td>變動金額</td><td>≥ 5,000 元</td><td>金額變動超過此值才視為異常</td></tr>
+    <tr><td>變動率</td><td>≥ 5%</td><td>百分比變動超過此值才視為異常</td></tr>
+  </table>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer style="text-align:center;padding:2rem 0 1rem;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:.82rem;">
+  <p>儲蓄互助社分析系統 · CU-Analysis-v1</p>
+  <p style="margin-top:.2rem;">Powered by Streamlit Cloud · 資料來源為 Excel 社務報表與 CSV 會計科目 PR019</p>
+</footer>
+
+</div><!-- /container -->
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 _root = str(Path(__file__).resolve().parent.parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
@@ -24,16 +25,26 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         with pd.ExcelFile(io.BytesIO(file_bytes)) as xls:
             if not all(s in xls.sheet_names for s in sheets.values()):
                 raise ValueError("Excel 缺少必要工作表，請檢查分頁名稱。")
-            df_m_raw = pd.read_excel(xls, sheet_name=sheets["MAIN"],   dtype={"社號": str, "年月": str})
-            df_l_raw = pd.read_excel(xls, sheet_name=sheets["LOAN"],   dtype={"社號": str, "年月": str})
-            df_r_raw = pd.read_excel(xls, sheet_name=sheets["REGION"], dtype={"社名": str, "區域": str, "密碼": str})
+            df_m_raw = pd.read_excel(
+                xls, sheet_name=sheets["MAIN"], dtype={"社號": str, "年月": str}
+            )
+            df_l_raw = pd.read_excel(
+                xls, sheet_name=sheets["LOAN"], dtype={"社號": str, "年月": str}
+            )
+            df_r_raw = pd.read_excel(
+                xls,
+                sheet_name=sheets["REGION"],
+                dtype={"社名": str, "區域": str, "密碼": str},
+            )
             df_l_raw = df_l_raw.rename(columns={"收支比": "開支比"})
     except Exception as e:
         raise ValueError(f"解析失敗: {e}")
 
     region_map = dict(zip(df_r_raw["社名"], df_r_raw["區域"]))
     pw_to_info = {
-        str(p).strip().replace(".0", ""): {"name": str(n).strip(), "region": str(r).strip()}
+        str(p)
+        .strip()
+        .replace(".0", ""): {"name": str(n).strip(), "region": str(r).strip()}
         for n, r, p in zip(df_r_raw["社名"], df_r_raw["區域"], df_r_raw["密碼"])
         if pd.notna(n) and pd.notna(r) and pd.notna(p)
     }
@@ -42,17 +53,21 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     df_l_raw["年月"] = df_l_raw["年月"].apply(convert_minguo_date)
     for col in ["社員數", "股金", "貸放比"]:
         df_m_raw[col] = pd.to_numeric(df_m_raw[col], errors="coerce").fillna(0)
-    
+
     df_m_raw["儲蓄率"] = defensive_clean_series(
         pd.to_numeric(df_m_raw["儲蓄率"], errors="coerce").fillna(0), "儲蓄率"
     )
-    df_l_raw["逾放比"]  = pd.to_numeric(df_l_raw["逾放比"],  errors="coerce").fillna(0)
-    df_l_raw["逾期貸款"] = pd.to_numeric(df_l_raw["逾期貸款"], errors="coerce").fillna(0)
-    df_l_raw["開支比"]  = defensive_clean_series(
+    df_l_raw["逾放比"] = pd.to_numeric(df_l_raw["逾放比"], errors="coerce").fillna(0)
+    df_l_raw["逾期貸款"] = pd.to_numeric(df_l_raw["逾期貸款"], errors="coerce").fillna(
+        0
+    )
+    df_l_raw["開支比"] = defensive_clean_series(
         pd.to_numeric(df_l_raw["開支比"], errors="coerce").fillna(0), "開支比"
     )
     if "提撥率" in df_l_raw.columns:
-        df_l_raw["提撥率"] = pd.to_numeric(df_l_raw["提撥率"], errors="coerce").fillna(0)
+        df_l_raw["提撥率"] = pd.to_numeric(df_l_raw["提撥率"], errors="coerce").fillna(
+            0
+        )
     else:
         df_l_raw["提撥率"] = 0.0
 
@@ -62,8 +77,8 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     if df_m.empty:
         return pd.DataFrame(), df_m, df_l, pw_to_info, region_map
 
-    max_d   = df_m["年月"].max()
-    min_d   = df_m["年月"].min()
+    max_d = df_m["年月"].max()
+    min_d = df_m["年月"].min()
     dec_dates = df_m[df_m["年月"].dt.month == 12]["年月"]
     T0 = dec_dates.max() if not dec_dates.empty else max_d
     T1 = max(T0 - pd.DateOffset(years=1), min_d)
@@ -80,47 +95,68 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         name = ms["社名"].iloc[0]
 
         M0, M1, M2, M3 = (_get_value(ms, "社員數", t) for t in (T0, T1, T2, T3))
-        S0, S1, S2, S3 = (_get_value(ms, "股金",   t) for t in (T0, T1, T2, T3))
-        R0, R1 = _get_value(ls, "開支比",  T0), _get_value(ls, "開支比",  T1)
+        S0, S1, S2, S3 = (_get_value(ms, "股金", t) for t in (T0, T1, T2, T3))
+        R0, R1 = _get_value(ls, "開支比", T0), _get_value(ls, "開支比", T1)
         O0, O1 = _get_value(ls, "逾期貸款", T0), _get_value(ls, "逾期貸款", T1)
-        eOvd   = _get_value(ls, "逾放比",  T0)
-        eLoan  = _get_value(ms, "貸放比",  T0)
-        sLoan  = _get_value(ms, "貸放比",  T1)
-        memG   = safe_div(M0 - M1, M1)
-        shrG   = safe_div(S0 - S1, S1)
+        eOvd = _get_value(ls, "逾放比", T0)
+        eLoan = _get_value(ms, "貸放比", T0)
+        sLoan = _get_value(ms, "貸放比", T1)
+        memG = safe_div(M0 - M1, M1)
+        shrG = safe_div(S0 - S1, S1)
 
-        p = dict(M0=M0, M1=M1, M2=M2, M3=M3,
-                 S0=S0, S1=S1, S2=S2, S3=S3,
-                 R0=R0, R1=R1, O0=O0, O1=O1,
-                 eOvd=eOvd, sOvd=_get_value(ls, "逾放比", T1),
-                 eLoan=eLoan, sLoan=sLoan, memG=memG, shrG=shrG)
+        p = dict(
+            M0=M0,
+            M1=M1,
+            M2=M2,
+            M3=M3,
+            S0=S0,
+            S1=S1,
+            S2=S2,
+            S3=S3,
+            R0=R0,
+            R1=R1,
+            O0=O0,
+            O1=O1,
+            eOvd=eOvd,
+            sOvd=_get_value(ls, "逾放比", T1),
+            eLoan=eLoan,
+            sLoan=sLoan,
+            memG=memG,
+            shrG=shrG,
+        )
         status, reason = classify(p, thresholds)
 
-        curr_M    = _get_value(ms, "社員數", max_d)
-        curr_S    = _get_value(ms, "股金",   max_d)
-        curr_eLoan = _get_value(ms, "貸放比",  max_d)
-        curr_eOvd  = _get_value(ls, "逾放比",  max_d)
-        curr_R     = _get_value(ls, "開支比",  max_d)
-        eOvd_12m   = _get_value(ls, "逾放比",  T_12M)
-        memG_curr  = safe_div(curr_M - M0, M0)
-        shrG_curr  = safe_div(curr_S - S0, S0)
+        curr_M = _get_value(ms, "社員數", max_d)
+        curr_S = _get_value(ms, "股金", max_d)
+        curr_eLoan = _get_value(ms, "貸放比", max_d)
+        curr_eOvd = _get_value(ls, "逾放比", max_d)
+        curr_R = _get_value(ls, "開支比", max_d)
+        eOvd_12m = _get_value(ls, "逾放比", T_12M)
+        memG_curr = safe_div(curr_M - M0, M0)
+        shrG_curr = safe_div(curr_S - S0, S0)
 
-        rows.append({
-            "社號": s_no, "社名": name, "區域": region_map.get(name, "未分類"),
-            "診斷狀態": status, "建議留意事項": reason,
-            "現有社員": curr_M,
-            "社員成長數(12M)": curr_M - M0,
-            "社員成長率(12M)": memG_curr,
-            "現有股金": curr_S,
-            "股金成長率(12M)": shrG_curr,
-            "貸放比": curr_eLoan,
-            "儲蓄率": _get_value(ms, "儲蓄率", T0),
-            "逾放比(12M)": eOvd_12m,
-            "逾放比": curr_eOvd,
-            "開支比": curr_R,
-            "開支比(年)": R0,
-            "提撥率": float(ls.iloc[-1]["提撥率"]) if not ls.empty else 0.0,
-            "_sM": M0, "_sS": S0,
-        })
+        rows.append(
+            {
+                "社號": s_no,
+                "社名": name,
+                "區域": region_map.get(name, "未分類"),
+                "診斷狀態": status,
+                "建議留意事項": reason,
+                "現有社員": curr_M,
+                "社員成長數(12M)": curr_M - M0,
+                "社員成長率(12M)": memG_curr,
+                "現有股金": curr_S,
+                "股金成長率(12M)": shrG_curr,
+                "貸放比": curr_eLoan,
+                "儲蓄率": _get_value(ms, "儲蓄率", T0),
+                "逾放比(12M)": eOvd_12m,
+                "逾放比": curr_eOvd,
+                "開支比": curr_R,
+                "開支比(年)": R0,
+                "提撥率": float(ls.iloc[-1]["提撥率"]) if not ls.empty else 0.0,
+                "_sM": M0,
+                "_sS": S0,
+            }
+        )
 
     return pd.DataFrame(rows).fillna(0), df_m, df_l, pw_to_info, region_map

@@ -2,8 +2,10 @@
 完整測試 onboarding 模組的行為,包含首次提示、按鈕、CTA 渲染。
 不依賴完整 app.py 的 session state,直接呼叫 onboarding 函式。
 """
+
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -16,33 +18,53 @@ from components import onboarding
 
 def make_minimal_preloaded_data():
     """建立最小可用的 preloaded_data tuple,模擬 admin 有資料的狀態。"""
-    df_m = pd.DataFrame({
-        "年月": [pd.Timestamp("2023-12-01")],
-        "社號": ["001"],
-        "社名": ["測試社"],
-        "社員數": [1000],
-        "股金": [50_000_000],
-        "貸放比": [0.6],
-        "儲蓄率": [0.85],
-    })
-    df_l = pd.DataFrame({
-        "年月": [pd.Timestamp("2023-12-01")],
-        "社號": ["001"],
-        "社名": ["測試社"],
-        "逾期貸款": [100_000],
-        "逾放比": [0.005],
-        "開支比": [0.95],
-        "提撥率": [0.02],
-    })
-    main = pd.DataFrame([{
-        "社號": "001", "社名": "測試社", "區域": "未分類",
-        "診斷狀態": "📊 一般狀態", "建議留意事項": "各指標平穩",
-        "現有社員": 1000, "社員成長數(12M)": 50, "社員成長率(12M)": 0.05,
-        "現有股金": 50_000_000, "股金成長率(12M)": 0.05,
-        "貸放比": 0.6, "儲蓄率": 0.85, "逾放比(12M)": 0.005,
-        "逾放比": 0.005, "開支比": 0.95, "開支比(年)": 0.95,
-        "提撥率": 0.02, "_sM": 950, "_sS": 47_000_000,
-    }])
+    df_m = pd.DataFrame(
+        {
+            "年月": [pd.Timestamp("2023-12-01")],
+            "社號": ["001"],
+            "社名": ["測試社"],
+            "社員數": [1000],
+            "股金": [50_000_000],
+            "貸放比": [0.6],
+            "儲蓄率": [0.85],
+        }
+    )
+    df_l = pd.DataFrame(
+        {
+            "年月": [pd.Timestamp("2023-12-01")],
+            "社號": ["001"],
+            "社名": ["測試社"],
+            "逾期貸款": [100_000],
+            "逾放比": [0.005],
+            "開支比": [0.95],
+            "提撥率": [0.02],
+        }
+    )
+    main = pd.DataFrame(
+        [
+            {
+                "社號": "001",
+                "社名": "測試社",
+                "區域": "未分類",
+                "診斷狀態": "📊 一般狀態",
+                "建議留意事項": "各指標平穩",
+                "現有社員": 1000,
+                "社員成長數(12M)": 50,
+                "社員成長率(12M)": 0.05,
+                "現有股金": 50_000_000,
+                "股金成長率(12M)": 0.05,
+                "貸放比": 0.6,
+                "儲蓄率": 0.85,
+                "逾放比(12M)": 0.005,
+                "逾放比": 0.005,
+                "開支比": 0.95,
+                "開支比(年)": 0.95,
+                "提撥率": 0.02,
+                "_sM": 950,
+                "_sS": 47_000_000,
+            }
+        ]
+    )
     region_map = {"測試社": "未分類"}
     region_pws = {"1234": {"name": "測試社", "region": "未分類"}}
     return (main, df_m, df_l, b"fake_bytes", region_map, region_pws)
@@ -51,8 +73,12 @@ def make_minimal_preloaded_data():
 def snapshot_quiet(at, label):
     """安靜版的 snapshot,只印關鍵數字。"""
     print(f"\n>>> {label}")
-    print(f"  [exception] {len(at.exception)} | [error] {len(at.error)} | [warning] {len(at.warning)}")
-    print(f"  [markdown]  {len(at.markdown)} | [button] {len(at.button)} | [text_input] {len(at.text_input)}")
+    print(
+        f"  [exception] {len(at.exception)} | [error] {len(at.error)} | [warning] {len(at.warning)}"
+    )
+    print(
+        f"  [markdown]  {len(at.markdown)} | [button] {len(at.button)} | [text_input] {len(at.text_input)}"
+    )
 
 
 # =========================================================================

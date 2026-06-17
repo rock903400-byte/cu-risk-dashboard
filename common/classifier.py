@@ -8,11 +8,16 @@ def classify(p, thresholds):
     c5 = p["S0"] < p["S1"] < p["S2"] < p["S3"]
 
     reasons = []
-    if c1: reasons.append("連兩年虧損")
-    if c2: reasons.append("貸放比過低")
-    if c3: reasons.append("高逾放且惡化")
-    if c4: reasons.append("人數連三年衰退")
-    if c5: reasons.append("股金連三年衰退")
+    if c1:
+        reasons.append("連兩年虧損")
+    if c2:
+        reasons.append("貸放比過低")
+    if c3:
+        reasons.append("高逾放且惡化")
+    if c4:
+        reasons.append("人數連三年衰退")
+    if c5:
+        reasons.append("股金連三年衰退")
 
     if len(reasons) >= 2:
         return "🚨 特別關懷", "、".join(reasons)
@@ -21,9 +26,12 @@ def classify(p, thresholds):
         return "⚠️ 流動性緊繃", "貸放比偏高且股金衰退"
     if p["eLoan"] < T["idle_loan"] and p["eOvd"] < T["ovd_safe_line"]:
         return "💤 資金閒置", "貸放比偏低且逾放安全"
-    if (p["memG"] > 0 and p["shrG"] > 0
-            and T["stable_loan_min"] < p["eLoan"] < T["stable_loan_max"]
-            and p["eOvd"] < T["ovd_safe_line"]):
+    if (
+        p["memG"] > 0
+        and p["shrG"] > 0
+        and T["stable_loan_min"] < p["eLoan"] < T["stable_loan_max"]
+        and p["eOvd"] < T["ovd_safe_line"]
+    ):
         return "✅ 穩健模範", "各項指標均達標"
 
     notes = []
