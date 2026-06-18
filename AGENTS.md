@@ -51,10 +51,7 @@ pwsh scripts/type.ps1
 pwsh scripts/test.ps1
 ```
 
-**mypy 寬鬆設定**（`pyproject.toml [tool.mypy]`）：`ignore_missing_imports=true`、`disallow_untyped_defs=false`，並關閉 `var-annotated` / `call-overload` / `attr-defined`（Streamlit + plotly 噪音）。目前仍有 **3 個 `arg-type` 錯** 是真實 bug，需後續修：
-- `app.py:71` `supabase` 為 `Client | None` 但被傳入吃 `Client` 的函式
-- `app.py:86` 同上
-- `views/war_room.py:651` `compare_year` 為 `None` 但被傳入吃 `str` 的函式
+**mypy 寬鬆設定**（`pyproject.toml [tool.mypy]`）：`ignore_missing_imports=true`、`disallow_untyped_defs=false`，關閉 `var-annotated` / `call-overload` / `attr-defined`（Streamlit + plotly 噪音）。其餘錯誤（特別是 `arg-type`）要修。
 
 ---
 
@@ -93,7 +90,7 @@ app.py                            主入口（路由、session state、登入）
 
 ---
 
-## Session State 鍵值（app.py:39-58）
+## Session State 鍵值（app.py:40-59 附近）
 
 完整清單見 `..\CLAUDE.md`；deploy/ 內特有的：
 
@@ -112,12 +109,12 @@ app.py                            主入口（路由、session state、登入）
 
 ## 業務規則（不可任意修改）
 
-- **個社模式經營總覽**：4 個核心指標（社員總數、股金總額、開支比、逾放比）顯示「本社」自身數值，標籤用「本社」；區會/管理員維持區域/全台平均（`views/overview.py:37-44`）
+- **個社模式經營總覽**：4 個核心指標（社員總數、股金總額、開支比、逾放比）顯示「本社」自身數值，標籤用「本社」；區會/管理員維持區域/全台平均（`views/overview.py:44-50` 附近）
 - **股市紅綠燈**：紅漲＝好、綠跌＝壞（社員成長、股金增、收入增、淨利增、淨值比增）；綠漲＝壞、紅跌＝好（開支比升、逾放比升、負債比升、支出增）
 - **風險燈號**：特別關懷=紅、流動性緊繃=橘、資金閒置=藍、穩健模範=綠、一般狀態=灰 — 變更要同步改 `tests/test_classifier.py`（硬編碼字串）
-- **年月底線**：風險診斷的年度基準強制 12 月快照（`T0 = max(dec_dates)`，見 `data/excel_processor.py:62-66`）
+- **年月底線**：風險診斷的年度基準強制 12 月快照（`T0 = max(dec_dates)`，見 `data/excel_processor.py:83-86` 附近）
 - **合併鍵一律用「社號」不用「社名」**（防更名）
-- **「收支比」自動 rename 為「開支比」**（`data/excel_processor.py:30`），後續邏輯只認「開支比」
+- **「收支比」自動 rename 為「開支比」**（`data/excel_processor.py:39` 附近），後續邏輯只認「開支比」
 
 ---
 
@@ -136,7 +133,7 @@ Secrets 在 Streamlit Cloud Dashboard 設定，模板見 `.streamlit/secrets_tem
 
 ## 測試
 
-- 66 個 pytest 全部通過；每次改完跑 `pytest tests/ -v`
+- 69 個 pytest 全部通過；每次改完跑 `pytest tests/ -v`
 - `tests/test_excel_processor.py::TestProcessExcelFinal` 是 `process_excel_final` 的端對端驗證，**改該函式後必跑**
 - `tests/test_classifier.py` 內狀態字串（如 `"🚨 特別關懷"`）是硬編碼，改 `common/classifier.py` 的 emoji / 文字要同步更新
 - `@st.cache_data` 跨測試可能互相干擾，新增 case 後建議跑全套
@@ -146,15 +143,17 @@ Secrets 在 Streamlit Cloud Dashboard 設定，模板見 `.streamlit/secrets_tem
 
 ---
 
-## ★ 高風險函式：`process_excel_final`（`data/excel_processor.py:21`）
+## ★ 高風險函式：`process_excel_final`（`data/excel_processor.py:22`）
+
+> 行號會隨改版漂移；`grep` 二次確認。
 
 **過去 bug 實錄**：曾誤用巢狀 `get_v` 而非模組層 `_get_value`，導致共享連結全壞且錯誤訊息誤導。
 
 **規則**：
-- 模組層已有 `_get_value(df, col, d)`（`common/dates.py:18`，回傳 `float`），**不要**再寫巢狀同名函式
-- 百分比欄位防禦性清洗（`data/excel_processor.py:46-57`）每欄規則不同，改前先讀程式碼
-- **提撥率**欄位可能缺失（`data/excel_processor.py:54`）：`if "提撥率" in df_l_raw.columns` 先檢查，否則直接 assign 純量會被 `fillna(0)` 視為 Series 而 crash
-- **cache buster**：函式內的 `_VER` 字串（`data/excel_processor.py:22`）與模組層 `_CACHE_VER`（`data/excel_processor.py:17`）**兩處都要 bump**，前者清 bytecode、後者清 spinner 顯示
+- `common.dates.get_value`（被 import alias 成 `_get_value`，`common/dates.py:34` 附近，回傳 `float`）**不要**再寫巢狀同名函式
+- 百分比欄位防禦性清洗（`data/excel_processor.py:57-66` 附近）每欄規則不同，改前先讀程式碼
+- **提撥率**欄位可能缺失（`data/excel_processor.py:67` 附近）：`if "提撥率" in df_l_raw.columns` 先檢查，否則直接 assign 純量會被 `fillna(0)` 視為 Series 而 crash
+- **cache buster**：函式內的 `_VER` 字串（`data/excel_processor.py:23`）與模組層 `_CACHE_VER`（`data/excel_processor.py:18`）**兩處都要 bump**，前者清 bytecode、後者清 spinner 顯示
 - 修改後必跑 `pytest tests/test_excel_processor.py::TestProcessExcelFinal`
 
 ---
@@ -162,7 +161,8 @@ Secrets 在 Streamlit Cloud Dashboard 設定，模板見 `.streamlit/secrets_tem
 ## 易踩的坑
 
 - **`safe_secrets()`**（`config.py:48`）：**只是 `return st.secrets`**，不要再呼叫私有 `_parse()`（Streamlit 內部 API 會改）
-- **`st.query_params.get("file")` 是單值**（`app.py:64`），`?file=a&file=b` 只讀到第一個；設計上只用單檔案
+- **`download_file_from_storage` 已接受 `Client | None`**（`services/cloud.py:24`）：若 `init_supabase()` 回 None 會自己 `raise ValueError`，呼叫端不需 guard
+- **`st.query_params.get("file")` 是單值**（`app.py:65` 附近），`?file=a&file=b` 只讀到第一個；設計上只用單檔案
 - **`df_l` 可能為空**（`views/overview.py:52`）：過濾後若無放款資料，先 guard 再算 YoY，否則 `NaT - DateOffset` 會噴 TypeError
 - **CSV 年月是字串（`YYYYMM`）非 datetime**（`data/csv_processor.py:11` 轉 `str`），`services/diagnosis_service.py:21` 需自行 `pd.to_datetime(..., format="%Y%m")`
 - **`st.columns(4)` 手機版會擠壓**：CSS `@media (max-width: 640px)` 強制 `width: 100%` 已在 `config.py:139-148` 處理
