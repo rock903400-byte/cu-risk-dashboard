@@ -9,6 +9,7 @@ _root = str(Path(__file__).resolve().parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
 
+import html
 import logging
 import uuid
 
@@ -328,7 +329,10 @@ with st.sidebar:
         disp_name = (
             st.session_state["assigned_union"] or st.session_state["assigned_region"]
         )
-        badge_cls, badge_txt = "badge-viewer", f"👁️ 訪客：{disp_name}"
+        badge_cls, badge_txt = (
+            "badge-viewer",
+            f"👁️ 訪客：{html.escape(str(disp_name or ''))}",
+        )
     st.markdown(f'<div class="{badge_cls}">{badge_txt}</div>', unsafe_allow_html=True)
     if not st.session_state["confirm_logout"]:
         if st.button("🚪 登出系統", use_container_width=True):

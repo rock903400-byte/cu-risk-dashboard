@@ -1,3 +1,5 @@
+import html
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -125,18 +127,23 @@ def render_overview_page(
                 for _, row in subset.iterrows():
                     reason = row["建議留意事項"]
                     reason_html = (
-                        f'<div class="reason-text">→ {reason}</div>' if reason else ""
+                        f'<div class="reason-text">→ {html.escape(str(reason))}</div>'
+                        if reason
+                        else ""
                     )
                     items_html += (
                         f'<div class="union-item">'
-                        f'<span class="name-tag">{row["社名"]}</span>'
+                        f'<span class="name-tag">{html.escape(str(row["社名"]))}</span>'
                         f"{reason_html}</div>"
                     )
                 body = items_html or "無"
             else:
                 names = subset["社名"].tolist()
                 body = (
-                    " ".join(f'<span class="name-tag">{n}</span>' for n in names)
+                    " ".join(
+                        f'<span class="name-tag">{html.escape(str(n))}</span>'
+                        for n in names
+                    )
                     or "無"
                 )
             st.markdown(
@@ -244,7 +251,8 @@ def render_overview_page(
         for _s in status_order:
             _group = data[data["診斷狀態"] == _s]["社名"].tolist()
             if _group:
-                st.markdown(f"**{_s}**（{len(_group)} 社）：{'、'.join(_group)}")
+                _safe_names = [html.escape(str(n)) for n in _group]
+                st.markdown(f"**{_s}**（{len(_group)} 社）：{'、'.join(_safe_names)}")
 
     # ── 個社健檢 ──────────────────────────────────────────
     with tab_hc:
@@ -252,10 +260,12 @@ def render_overview_page(
         target = st.selectbox("請選擇儲互社", data["社名"].unique(), index=0)
         if target:
             row = data[data["社名"] == target].iloc[0]
-            st.markdown(f"#### 【{target}】 狀態：`{row['診斷狀態']}`")
+            st.markdown(
+                f"#### 【{html.escape(str(target))}】 狀態：`{html.escape(str(row['診斷狀態']))}`"
+            )
             if row["建議留意事項"]:
                 st.markdown(
-                    f'<div class="alert-box alert-error">🚩 觸發項目：{row["建議留意事項"]}</div>',
+                    f'<div class="alert-box alert-error">🚩 觸發項目：{html.escape(str(row["建議留意事項"]))}</div>',
                     unsafe_allow_html=True,
                 )
             KEYS = [
