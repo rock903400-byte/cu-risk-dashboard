@@ -89,6 +89,147 @@ def make_synth_data():
     return data, df_m, df_l
 
 
+# === Pytest regression tests for fixes in 568a268 + 69486c7 ===
+# 下方 module-level 為 audit script，pytest 只收集本段 test_ 開頭的函式
+_APP_PATH = str(Path(__file__).resolve().parent.parent / "app.py")
+
+
+def test_xss_via_assigned_union():
+    """69486c7: viewer badge 不應執行惡意 JS"""
+    malicious = "<img src=x onerror=alert(1)>"
+    data, df_m, df_l = make_synth_data()
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "viewer"
+    at.session_state["assigned_region"] = "北區"
+    at.session_state["assigned_union"] = malicious
+    at.session_state["preloaded_data"] = (data, df_m, df_l, b"", {})
+    at.session_state["preloaded_csv"] = None
+    at.run()
+    all_text = "".join(m.value for m in at.markdown)
+    assert not at.exception, f"AppTest exception: {[e.value for e in at.exception]}"
+    assert malicious not in all_text, f"XSS payload rendered: {all_text[:200]}"
+
+
+def test_xss_via_union_name():
+    """69486c7: 狀態雷達/報表匯出/個社健檢 H3/alert-box 不應執行惡意 JS"""
+    malicious = "X<script>alert(1)</script>"
+    base_data, df_m, df_l = make_synth_data()
+    data2 = base_data.copy()
+    data2["社名"] = malicious
+    data2["區域"] = "北區"
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "admin"
+    at.session_state["assigned_region"] = None
+    at.session_state["assigned_union"] = None
+    at.session_state["is_district_office"] = False
+    at.session_state["preloaded_data"] = (data2, df_m, df_l, b"", {malicious: "北區"})
+    at.session_state["preloaded_csv"] = None
+    at.run()
+    all_text = "".join(m.value for m in at.markdown)
+    assert not at.exception, f"AppTest exception: {[e.value for e in at.exception]}"
+    assert malicious not in all_text, f"XSS payload rendered: {all_text[:200]}"
+
+
+def test_empty_df_m_no_crash():
+    """568a268: 空 df_m 不應 NaT.year crash"""
+    empty_cols = [
+        "社號",
+        "社名",
+        "區域",
+        "診斷狀態",
+        "建議留意事項",
+        "現有社員",
+        "社員成長數(12M)",
+        "社員成長率(12M)",
+        "現有股金",
+        "股金成長率(12M)",
+        "貸放比",
+        "儲蓄率",
+        "逾放比(12M)",
+        "逾放比",
+        "開支比",
+        "開支比(年)",
+        "提撥率",
+        "_sM",
+        "_sS",
+    ]
+    data, _, df_l = make_synth_data()
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "admin"
+    at.session_state["preloaded_data"] = (
+        data,
+        pd.DataFrame(columns=empty_cols),
+        df_l,
+        b"",
+        {},
+    )
+    at.session_state["preloaded_csv"] = None
+    at.run()
+    assert not at.exception, f"AppTest exception: {[e.value for e in at.exception]}"
+
+
+def test_individual_downgrade_shows_warning():
+    """568a268: 個社 viewer 找不到 union 應顯示 warning"""
+    data, df_m, df_l = make_synth_data()
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "viewer"
+    at.session_state["assigned_region"] = "北區"
+    at.session_state["assigned_union"] = "不存在的社"
+    at.session_state["preloaded_data"] = (data, df_m, df_l, b"", {})
+    at.session_state["preloaded_csv"] = None
+    at.run()
+    warnings_text = " ".join(w.value for w in at.warning)
+    assert "找不到" in warnings_text, f"預期降級 warning,實際: {warnings_text}"
+    assert not at.exception
+
+
+def test_strict_union_comparison_with_whitespace():
+    """568a268: 個社 union 比對容錯 Excel 空白差異（trailing space 應正常匹配）"""
+    data, df_m, df_l = make_synth_data()
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "viewer"
+    at.session_state["assigned_region"] = "北區"
+    at.session_state["assigned_union"] = "測試社 "  # 尾端空白
+    at.session_state["preloaded_data"] = (data, df_m, df_l, b"", {})
+    at.session_state["preloaded_csv"] = None
+    at.run()
+    warnings_text = " ".join(w.value for w in at.warning)
+    assert (
+        "找不到" not in warnings_text
+    ), f"strip 後應匹配,不應降級 warning: {warnings_text}"
+    assert not at.exception
+
+
+def test_only_csv_preload_no_crash():
+    """568a268: 只有 CSV 無 Excel 不應 TypeError unpack None crash"""
+    empty_csv = pd.DataFrame(
+        columns=[
+            "社號",
+            "社名",
+            "區域",
+            "年度",
+            "年月",
+            "會計科目",
+            "會科名稱",
+            "當月金額",
+        ]
+    )
+    at = AppTest.from_file(_APP_PATH, default_timeout=30)
+    at.session_state["logged_in"] = True
+    at.session_state["role"] = "viewer"
+    at.session_state["assigned_region"] = "北區"
+    at.session_state["assigned_union"] = "測試社"
+    at.session_state["preloaded_data"] = None
+    at.session_state["preloaded_csv"] = (empty_csv, b"")
+    at.run()
+    assert not at.exception, f"AppTest exception: {[e.value for e in at.exception]}"
+
+
 # ============================================================
 # A1. XSS via assigned_union (with real data)
 # ============================================================
