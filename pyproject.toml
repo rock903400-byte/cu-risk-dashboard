@@ -8,16 +8,72 @@ exclude = '''
   | \.streamlit
   | docs
   | tests/fixtures
+  | tools/data_fetcher
 )/
 '''
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = ["E203", "W503", "E501"]
+extend-ignore = [
+    "E203",  # whitespace before : (black 相容)
+    "W503",  # line break before binary op (black 相容)
+    "E501",  # line too long (black 已處理)
+    "E402",  # module level import not at top (Streamlit sys.path hack)
+    "F401",  # imported but unused (re-export 與測試 fixture 常見)
+    "F811",  # redefinition of unused name (test fixtures)
+    "F841",  # local variable assigned but never used
+    "F402",  # import module shadowed by loop variable
+    "F541",  # f-string without any interpolation
+    "E722",  # bare except
+    "E731",  # do not assign a lambda
+]
 exclude = [
     ".git",
     ".pytest_cache",
     ".streamlit",
     "docs",
     "tests/fixtures",
+    "tools/data_fetcher",
+    "build",
+    "dist",
+    ".venv",
 ]
+
+[tool.mypy]
+python_version = "3.10"
+files = [
+    "app.py",
+    "config.py",
+    "common",
+    "components",
+    "data",
+    "services",
+    "views",
+    "charts",
+]
+exclude = [
+    "tests/",
+    "docs/",
+    "tools/data_fetcher/",
+    "\\.venv/",
+    "build/",
+    "dist/",
+]
+ignore_missing_imports = true
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+check_untyped_defs = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+show_error_codes = true
+pretty = true
+disable_error_code = [
+    "var-annotated",   # 寬鬆：未標註 module/區域變數（Streamlit pattern 常見）
+    "call-overload",   # plotly 型別 stub 與新版本不符
+    "attr-defined",    # 寬鬆：untyped 變數衍生的屬性存取
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

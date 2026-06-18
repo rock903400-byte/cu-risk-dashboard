@@ -647,9 +647,10 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             compare_year = None if compare_choice == "（不比較）" else compare_choice
 
             annual_agg = get_annual_snapshot(analysis_df, selected_year)
-            compare_agg = (
-                get_annual_snapshot(analysis_df, compare_year) if compare_year else None
-            )
+            if compare_year:
+                compare_agg = get_annual_snapshot(analysis_df, compare_year)
+            else:
+                compare_agg = None
 
             if compare_year:
                 _sel_months = sorted(

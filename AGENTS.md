@@ -13,7 +13,7 @@
 # 啟動 app
 streamlit run app.py
 
-# 跑全部測試（66 個 case）
+# 跑全部測試（69 個 case）
 pytest tests/ -v
 
 # 單一檔案
@@ -23,7 +23,38 @@ pytest tests/test_excel_processor.py
 pytest tests/test_excel_processor.py::TestProcessExcelFinal::test_returns_five_tuple_with_correct_shapes
 ```
 
-**無** lint / typecheck / formatter。要加之前先問使用者。
+### 程式碼品質（format / lint / typecheck）
+
+工具：`black` + `flake8` + `mypy`（dev-only，不進 `requirements.txt`）。
+config 統一在 `pyproject.toml`（注意：flake8 透過 `Flake8-pyproject` 插件讀這檔，原本的 `.flake8` 已刪）。
+dev 安裝：`pip install -r requirements-dev.txt`。
+
+```bash
+# Linux / macOS / 裝了 GNU make 的 Windows
+make help       # 看所有 target
+make fmt        # black 格式化
+make fmt-check  # black --check（CI 用）
+make lint       # flake8
+make type       # mypy
+make test       # pytest -v
+make review     # git status + diff stat
+make verify     # lint + type + test（一錯就停）
+make all        # fmt + verify
+
+# Windows 沒裝 make → 用 PowerShell scripts
+pwsh scripts/all.ps1               # 一鍵跑全部
+pwsh scripts/all.ps1 -SkipFmt      # 跳過格式化
+pwsh scripts/all.ps1 -SkipType     # 跳過型別檢查
+pwsh scripts/format.ps1            # 個別跑
+pwsh scripts/lint.ps1
+pwsh scripts/type.ps1
+pwsh scripts/test.ps1
+```
+
+**mypy 寬鬆設定**（`pyproject.toml [tool.mypy]`）：`ignore_missing_imports=true`、`disallow_untyped_defs=false`，並關閉 `var-annotated` / `call-overload` / `attr-defined`（Streamlit + plotly 噪音）。目前仍有 **3 個 `arg-type` 錯** 是真實 bug，需後續修：
+- `app.py:71` `supabase` 為 `Client | None` 但被傳入吃 `Client` 的函式
+- `app.py:86` 同上
+- `views/war_room.py:651` `compare_year` 為 `None` 但被傳入吃 `str` 的函式
 
 ---
 

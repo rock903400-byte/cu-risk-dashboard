@@ -1,3 +1,4 @@
 black==24.3.0
 flake8==7.0.0
+Flake8-pyproject==1.2.4
 mypy==1.9.0

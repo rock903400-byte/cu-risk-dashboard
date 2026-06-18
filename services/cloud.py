@@ -21,7 +21,9 @@ def init_supabase() -> Client | None:
 
 
 @st.cache_data(show_spinner="📥 正在同步數據...")
-def download_file_from_storage(_supabase: Client, bucket: str, fname: str) -> bytes:
+def download_file_from_storage(
+    _supabase: Client | None, bucket: str, fname: str
+) -> bytes:
     if not _supabase:
         raise ValueError("雲端服務未設定，無法下載檔案。")
     return _supabase.storage.from_(bucket).download(fname)
