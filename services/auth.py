@@ -1,3 +1,5 @@
+import html
+
 import streamlit as st
 
 from config import safe_secrets
@@ -35,8 +37,15 @@ def render_login_page(max_attempts: int):
                 unsafe_allow_html=True,
             )
             if st.session_state.get("preload_err"):
+                _msg = html.escape(str(st.session_state["preload_err"]))
                 st.markdown(
-                    f'<div class="alert-box alert-error">⚠️ 無法讀取雲端資料，請確認連結。<br><small>錯誤訊息: {st.session_state["preload_err"]}</small></div>',
+                    f'<div class="alert-box alert-error">⚠️ 無法讀取雲端 Excel 資料，請確認連結。<br><small>錯誤訊息: {_msg}</small></div>',
+                    unsafe_allow_html=True,
+                )
+            if st.session_state.get("preload_csv_err"):
+                _msg = html.escape(str(st.session_state["preload_csv_err"]))
+                st.markdown(
+                    f'<div class="alert-box alert-error">⚠️ 無法讀取雲端 CSV 資料，請確認連結或聯絡管理員。<br><small>錯誤訊息: {_msg}</small></div>',
                     unsafe_allow_html=True,
                 )
             if st.session_state["locked"]:

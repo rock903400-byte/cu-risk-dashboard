@@ -88,6 +88,7 @@ if shared_csv and st.session_state["preloaded_csv"] is None:
         st.session_state["preloaded_csv"] = (process_csv_final(raw_csv), raw_csv)
     except Exception as e:
         logger.error(f"CSV 載入失敗: {e}")
+        st.session_state["preload_csv_err"] = str(e)
 
 # ── 登入關卡 ──────────────────────────────────────────────
 if not st.session_state["logged_in"]:
@@ -106,21 +107,32 @@ if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
     union = st.session_state["assigned_union"]
 
     if region:
-        # 取得該區域內所有實際有財報的社名
+        # 取得該區域內所有實際有財報的社名（去 NaN 以容錯真實 Excel 空白）
         region_data = data[data["區域"] == region].copy()
-        actual_unions_in_reg = set(region_data["社名"].unique())
+        actual_unions_in_reg = set(region_data["社名"].dropna().unique())
 
-        if union in actual_unions_in_reg:
+        # 建立 strip 後的對照表，容錯真實 Excel 空白/全半形差異
+        _norm_to_orig = {
+            u.strip(): u for u in actual_unions_in_reg if isinstance(u, str)
+        }
+        _target = (union or "").strip()
+
+        if _target and _target in _norm_to_orig:
             # 【個社模式】：登入名稱是一個實際存在的社
-            data = data[data["社名"] == union].copy()
+            data = data[data["社名"] == _norm_to_orig[_target]].copy()
             st.session_state["is_district_office"] = False
         else:
             # 【區會模式】：登入名稱不在財報清單中，視為管理單位
+            st.session_state["is_district_office"] = True
+            if union:
+                st.warning(
+                    f"⚠️ 找不到『{union}』，已切換為 {region} 區會模式；"
+                    "請聯絡管理員更新資料。"
+                )
             if region_data.empty:
                 st.warning("該區目前尚無報表資料，請先上傳資料庫。")
                 st.stop()
             data = region_data.copy()
-            st.session_state["is_district_office"] = True
 
         target_snos = data["社號"].unique()
         df_m = df_m[df_m["社號"].isin(target_snos)].copy()
@@ -142,10 +154,15 @@ if st.session_state["preloaded_csv"]:
         # 個社：僅顯示自身資料
         df_csv = df_csv_full[df_csv_full["社名"] == union].copy()
     elif region:
-        # 區會或管理員：查看該區域內所有社
-        _, _, _, _, rm = st.session_state["preloaded_data"]
-        target_names = [n for n, r in rm.items() if r == region]
-        df_csv = df_csv_full[df_csv_full["社名"].isin(target_names)].copy()
+        # 區會或管理員：查看該區域內所有社（需 region_map，無 Excel 時無法歸屬）
+        _pd = st.session_state.get("preloaded_data")
+        if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
+            rm = _pd[4]
+            target_names = [n for n, r in rm.items() if r == region]
+            df_csv = df_csv_full[df_csv_full["社名"].isin(target_names)].copy()
+        else:
+            # 無 Excel 區域歸屬資料，無法做區域過濾 → 退而求其次顯示全部
+            df_csv = df_csv_full.copy()
     else:
         df_csv = df_csv_full.copy()
     data_loaded = True
@@ -179,7 +196,13 @@ if IS_ADMIN:
                     "✅ Excel 解析成功，資料已載入。",
                 )
             except Exception as e:
+                st.session_state["preloaded_data"] = None
+                st.session_state["preloaded_passwords"] = {}
                 st.session_state["xl_msg"] = ("error", f"❌ Excel 解析失敗：{e}")
+                # 清掉當前 run 的 local 變數，避免下方渲染繼續用舊資料
+                data = df_m = df_l = region_map = None
+                raw_bytes = None  # type: ignore[assignment]
+                data_loaded = False
 
         if st.session_state["xl_msg"]:
             _t, _m = st.session_state["xl_msg"]
