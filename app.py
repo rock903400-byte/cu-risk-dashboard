@@ -67,6 +67,9 @@ shared_file = st.query_params.get("file")
 shared_csv = st.query_params.get("csv")
 
 if shared_file and st.session_state["preloaded_data"] is None:
+    # 嘗試載入雲端檔案前，先清除前一次的錯誤訊息，避免舊錯誤殘留
+    st.session_state["preload_err"] = None
+    st.session_state["preload_csv_err"] = None
     try:
         raw_bytes = download_file_from_storage(
             supabase, CONFIG["BUCKET_NAME"], shared_file
@@ -344,6 +347,8 @@ with st.sidebar:
         if _cy.button("✅ 確定登出", use_container_width=True):
             for k, v in _DEFAULTS.items():
                 st.session_state[k] = v
+            # 清除密碼欄位，防止登出後仍顯示前一次密碼
+            st.session_state["pwd_input"] = ""
             st.rerun()
         if _cn.button("❌ 取消", use_container_width=True):
             st.session_state["confirm_logout"] = False
