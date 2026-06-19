@@ -54,6 +54,8 @@ _DEFAULTS = {
     "confirm_logout": False,
     "xl_msg": None,
     "csv_msg": None,
+    "preload_err": None,
+    "preload_csv_err": None,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -156,7 +158,7 @@ if st.session_state["preloaded_csv"]:
 
     if union and not is_dist:
         # 個社：僅顯示自身資料
-        df_csv = df_csv_full[df_csv_full["社名"] == union].copy()
+        df_csv = df_csv_full[df_csv_full["社名"] == union.strip()].copy()
     elif region:
         # 區會或管理員：查看該區域內所有社（需 region_map，無 Excel 時無法歸屬）
         _pd = st.session_state.get("preloaded_data")
@@ -295,7 +297,7 @@ if "儲互社" in disp_title:
 else:
     display_text = f"{disp_title} 儲互社分析系統"
 
-st.markdown(f"<h1 class='responsive-h1'>📊 {display_text}</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 class='responsive-h1'>📊 {html.escape(display_text)}</h1>", unsafe_allow_html=True)
 
 # ── 導覽側邊欄 ────────────────────────────────────────────
 with st.sidebar:
