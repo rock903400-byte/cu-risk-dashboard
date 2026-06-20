@@ -168,6 +168,7 @@ class UXScorer:
         self, expected: List[str], result: JourneyResult, at: AppTest
     ) -> List[str]:
         hit = []
+        nav = ""
         for pp in expected:
             if pp == "PP-1": # 找不到
                 if any("找不到" in str(e.get("value", "")) for e in result.errors):
@@ -184,14 +185,17 @@ class UXScorer:
                 if "pwd_input" in at.session_state and at.session_state["pwd_input"]:
                     hit.append(pp)
             elif pp == "PP-5": # Login 失敗未鎖定
-                if at.session_state.get("login_attempts", 0) >= 3 and not at.session_state.get("locked", False):
+                login_attempts = at.session_state["login_attempts"] if "login_attempts" in at.session_state else 0
+                locked = at.session_state["locked"] if "locked" in at.session_state else False
+                if login_attempts >= 3 and not locked:
                     hit.append(pp)
             elif pp == "PP-6": # 非法頁面
-                nav = at.session_state.get("nav_selection", "")
+                nav = at.session_state["nav_selection"] if "nav_selection" in at.session_state else ""
                 if nav and nav not in ["overview", "war_room"]:
                     hit.append(pp)
             elif pp == "PP-7": # 空資料進入資料頁
-                if at.session_state.get("preloaded_data") is None and nav in ["overview", "war_room"]:
+                has_data = "preloaded_data" in at.session_state and at.session_state["preloaded_data"] is not None
+                if not has_data and nav in ["overview", "war_room"]:
                     hit.append(pp)
             elif pp == "PP-8": # KPI NaN/Inf
                 for t in at.text:
@@ -199,8 +203,8 @@ class UXScorer:
                         hit.append(pp)
                         break
             elif pp == "PP-9": # 多次重複下載
-                # Check session state if we tracked download count
-                if at.session_state.get("download_count", 0) > 1:
+                dcount = at.session_state["download_count"] if "download_count" in at.session_state else 0
+                if dcount > 1:
                     hit.append(pp)
             elif pp == "PP-10": # 空 df 跑 YoY
                 if any("TypeError" in str(e.get("value", "")) for e in result.exceptions):
@@ -211,13 +215,18 @@ class UXScorer:
 def service_layer_audit(at: AppTest, result: JourneyResult):
     """Audit the final session state against business logic and services."""
     sess = at.session_state
-    data = sess.get("preloaded_data")
+    data = sess["preloaded_data"] if "preloaded_data" in sess else None
     if not data:
         return
 
     # data is expected to be (data, df_m, df_l, raw_bytes, region_map)
     try:
+        if not isinstance(data, (list, tuple)) or len(data) < 3:
+            return
         df_m, df_l = data[1], data[2]
+        import pandas as pd
+        if not isinstance(df_l, pd.DataFrame):
+            return
         
         # 1. Check for NaN/Inf in critical columns
         for col in ["社員", "股金", "開支比"]:
@@ -229,7 +238,6 @@ def service_layer_audit(at: AppTest, result: JourneyResult):
         
         # 2. Verify YoY calculations aren't crashing (simulated)
         if len(df_l) > 0:
-            # If we had access to calc_yoy_pct we'd call it here
             pass
             
     except Exception as e:

@@ -56,6 +56,7 @@ _DEFAULTS = {
     "csv_msg": None,
     "preload_err": None,
     "preload_csv_err": None,
+    "share_generating": False,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -65,8 +66,17 @@ for _k, _v in _DEFAULTS.items():
 supabase = init_supabase()
 
 # ── 共享連結預載 ──────────────────────────────────────────
+_MAX_PARAM_LEN = 256
+
 shared_file = st.query_params.get("file")
 shared_csv = st.query_params.get("csv")
+
+if shared_file and len(shared_file) > _MAX_PARAM_LEN:
+    st.error("❌ 分享連結參數過長（可能為攻擊或損壞），已忽略。")
+    shared_file = None
+if shared_csv and len(shared_csv) > _MAX_PARAM_LEN:
+    st.error("❌ 分享連結參數過長（可能為攻擊或損壞），已忽略。")
+    shared_csv = None
 
 if shared_file and st.session_state["preloaded_data"] is None:
     # 嘗試載入雲端檔案前，先清除前一次的錯誤訊息，避免舊錯誤殘留
@@ -95,6 +105,14 @@ if shared_csv and st.session_state["preloaded_csv"] is None:
     except Exception as e:
         logger.error(f"CSV 載入失敗: {e}")
         st.session_state["preload_csv_err"] = str(e)
+
+# ── 預載錯誤反饋 ──────────────────────────────────────────
+if "preload_err" in st.session_state and st.session_state["preload_err"]:
+    st.error(f"❌ Excel 資料載入失敗：{st.session_state['preload_err']}")
+    st.session_state["preload_err"] = None
+if "preload_csv_err" in st.session_state and st.session_state["preload_csv_err"]:
+    st.error(f"❌ CSV 資料載入失敗：{st.session_state['preload_csv_err']}")
+    st.session_state["preload_csv_err"] = None
 
 # ── 登入關卡 ──────────────────────────────────────────────
 if not st.session_state["logged_in"]:
@@ -242,33 +260,37 @@ if IS_ADMIN:
             st.markdown(
                 '<span class="sidebar-label">🔗 分享功能</span>', unsafe_allow_html=True
             )
-            if st.button("🚀 生成分享連結", use_container_width=True):
-                if not supabase:
-                    st.error("❌ 雲端服務未設定，無法產生分享連結。")
-                else:
-                    params = []
-                    if st.session_state["preloaded_data"]:
-                        f_xl = f"xl_{uuid.uuid4().hex[:8]}.xlsx"
-                        supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
-                            f_xl,
-                            st.session_state["preloaded_data"][3],
-                            file_options={
-                                "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            },
-                        )
-                        params.append(f"file={f_xl}")
-                    if st.session_state["preloaded_csv"]:
-                        f_csv = f"csv_{uuid.uuid4().hex[:8]}.csv"
-                        supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
-                            f_csv,
-                            st.session_state["preloaded_csv"][1],
-                            file_options={"content-type": "text/csv"},
-                        )
-                        params.append(f"csv={f_csv}")
-                    if params:
-                        st.session_state["latest_share_url"] = (
-                            f"{CONFIG['APP_BASE_URL']}/?{'&'.join(params)}"
-                        )
+            if st.button("🚀 生成分享連結", use_container_width=True, disabled=("share_generating" in st.session_state and st.session_state["share_generating"])):
+                st.session_state["share_generating"] = True
+                try:
+                    if not supabase:
+                        st.error("❌ 雲端服務未設定，無法產生分享連結。")
+                    else:
+                        params = []
+                        if st.session_state["preloaded_data"]:
+                            f_xl = f"xl_{uuid.uuid4().hex[:8]}.xlsx"
+                            supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
+                                f_xl,
+                                st.session_state["preloaded_data"][3],
+                                file_options={
+                                    "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                },
+                            )
+                            params.append(f"file={f_xl}")
+                        if st.session_state["preloaded_csv"]:
+                            f_csv = f"csv_{uuid.uuid4().hex[:8]}.csv"
+                            supabase.storage.from_(CONFIG["BUCKET_NAME"]).upload(
+                                f_csv,
+                                st.session_state["preloaded_csv"][1],
+                                file_options={"content-type": "text/csv"},
+                            )
+                            params.append(f"csv={f_csv}")
+                        if params:
+                            st.session_state["latest_share_url"] = (
+                                f"{CONFIG['APP_BASE_URL']}/?{'&'.join(params)}"
+                            )
+                finally:
+                    st.session_state["share_generating"] = False
             if "latest_share_url" in st.session_state:
                 st.code(st.session_state["latest_share_url"], language="text")
 
