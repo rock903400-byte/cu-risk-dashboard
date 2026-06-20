@@ -32,7 +32,7 @@ def render_overview_page(
     THEME = config["THEME_BG"]
     T = config["THRESHOLDS"]
 
-    if df_m.empty or df_m["年月"].dropna().empty:
+    if df_m is None or df_m.empty or df_m["年月"].dropna().empty:
         st.info(
             "📭 目前無「社務及資金運用情形」資料，"
             "請由側邊欄上傳 Excel 資料庫或透過分享連結載入。"

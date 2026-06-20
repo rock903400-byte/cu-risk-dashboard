@@ -297,7 +297,10 @@ if "儲互社" in disp_title:
 else:
     display_text = f"{disp_title} 儲互社分析系統"
 
-st.markdown(f"<h1 class='responsive-h1'>📊 {html.escape(display_text)}</h1>", unsafe_allow_html=True)
+st.markdown(
+    f"<h1 class='responsive-h1'>📊 {html.escape(display_text)}</h1>",
+    unsafe_allow_html=True,
+)
 
 # ── 導覽側邊欄 ────────────────────────────────────────────
 with st.sidebar:
