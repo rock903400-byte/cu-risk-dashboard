@@ -23,6 +23,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import pandas as pd
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
@@ -148,9 +149,16 @@ class JourneyResult:
 class UXScorer:
     def __init__(self):
         self.pain_point_weights = {
-            "PP-1": 15, "PP-2": 15, "PP-3": 10, "PP-4": 5,
-            "PP-5": 10, "PP-6": 10, "PP-7": 5, "PP-8": 5,
-            "PP-9": 10, "PP-10": 5,
+            "PP-1": 15,
+            "PP-2": 15,
+            "PP-3": 10,
+            "PP-4": 5,
+            "PP-5": 10,
+            "PP-6": 10,
+            "PP-7": 5,
+            "PP-8": 5,
+            "PP-9": 10,
+            "PP-10": 5,
         }
 
     def score(self, result: JourneyResult) -> int:
@@ -170,44 +178,65 @@ class UXScorer:
         hit = []
         nav = ""
         for pp in expected:
-            if pp == "PP-1": # 找不到
+            if pp == "PP-1":  # 找不到
                 if any("找不到" in str(e.get("value", "")) for e in result.errors):
                     hit.append(pp)
-            elif pp == "PP-2": # 渲染慢
+            elif pp == "PP-2":  # 渲染慢
                 # AppTest doesn't give us real wall-clock time easily per run,
                 # but we can check if it took too many steps to reach target
                 if result.step_count > 10:
                     hit.append(pp)
-            elif pp == "PP-3": # 異常 Warning
+            elif pp == "PP-3":  # 異常 Warning
                 if any("警告" in str(w.get("value", "")) for w in result.warnings):
                     hit.append(pp)
-            elif pp == "PP-4": # 殘留敏感資訊
+            elif pp == "PP-4":  # 殘留敏感資訊
                 if "pwd_input" in at.session_state and at.session_state["pwd_input"]:
                     hit.append(pp)
-            elif pp == "PP-5": # Login 失敗未鎖定
-                login_attempts = at.session_state["login_attempts"] if "login_attempts" in at.session_state else 0
-                locked = at.session_state["locked"] if "locked" in at.session_state else False
+            elif pp == "PP-5":  # Login 失敗未鎖定
+                login_attempts = (
+                    at.session_state["login_attempts"]
+                    if "login_attempts" in at.session_state
+                    else 0
+                )
+                locked = (
+                    at.session_state["locked"]
+                    if "locked" in at.session_state
+                    else False
+                )
                 if login_attempts >= 3 and not locked:
                     hit.append(pp)
-            elif pp == "PP-6": # 非法頁面
-                nav = at.session_state["nav_selection"] if "nav_selection" in at.session_state else ""
+            elif pp == "PP-6":  # 非法頁面
+                nav = (
+                    at.session_state["nav_selection"]
+                    if "nav_selection" in at.session_state
+                    else ""
+                )
                 if nav and nav not in ["overview", "war_room"]:
                     hit.append(pp)
-            elif pp == "PP-7": # 空資料進入資料頁
-                has_data = "preloaded_data" in at.session_state and at.session_state["preloaded_data"] is not None
+            elif pp == "PP-7":  # 空資料進入資料頁
+                has_data = (
+                    "preloaded_data" in at.session_state
+                    and at.session_state["preloaded_data"] is not None
+                )
                 if not has_data and nav in ["overview", "war_room"]:
                     hit.append(pp)
-            elif pp == "PP-8": # KPI NaN/Inf
+            elif pp == "PP-8":  # KPI NaN/Inf
                 for t in at.text:
                     if "NaN" in t or "inf" in t:
                         hit.append(pp)
                         break
-            elif pp == "PP-9": # 多次重複下載
-                dcount = at.session_state["download_count"] if "download_count" in at.session_state else 0
+            elif pp == "PP-9":  # 多次重複下載
+                dcount = (
+                    at.session_state["download_count"]
+                    if "download_count" in at.session_state
+                    else 0
+                )
                 if dcount > 1:
                     hit.append(pp)
-            elif pp == "PP-10": # 空 df 跑 YoY
-                if any("TypeError" in str(e.get("value", "")) for e in result.exceptions):
+            elif pp == "PP-10":  # 空 df 跑 YoY
+                if any(
+                    "TypeError" in str(e.get("value", "")) for e in result.exceptions
+                ):
                     hit.append(pp)
         return hit
 
@@ -225,23 +254,49 @@ def service_layer_audit(at: AppTest, result: JourneyResult):
             return
         df_m, df_l = data[1], data[2]
         import pandas as pd
+
         if not isinstance(df_l, pd.DataFrame):
             return
-        
-        # 1. Check for NaN/Inf in critical columns
-        for col in ["社員", "股金", "開支比"]:
-            if col in df_l.columns:
-                if df_l[col].isin([float("inf"), -float("inf")]).any():
-                    result.issues.append({"severity": "HIGH", "code": "S-1", "title": f"欄位 {col} 含 Inf"})
-                if df_l[col].isna().sum() > len(df_l) * 0.3:
-                    result.issues.append({"severity": "MEDIUM", "code": "S-2", "title": f"欄位 {col} NaN 過多"})
-        
+
+        # 1. Check for NaN/Inf in critical columns (社員/股金 live in df_m, not df_l)
+        col_df_map = [
+            ("社員", df_m if isinstance(df_m, pd.DataFrame) else None),
+            ("股金", df_m if isinstance(df_m, pd.DataFrame) else None),
+            ("開支比", df_l),
+        ]
+        for col, df_check in col_df_map:
+            if df_check is None or col not in df_check.columns:
+                continue
+            if df_check[col].isin([float("inf"), -float("inf")]).any():
+                result.issues.append(
+                    {
+                        "severity": "HIGH",
+                        "code": "S-1",
+                        "title": f"欄位 {col} 含 Inf",
+                    }
+                )
+            if df_check[col].isna().sum() > len(df_check) * 0.3:
+                result.issues.append(
+                    {
+                        "severity": "MEDIUM",
+                        "code": "S-2",
+                        "title": f"欄位 {col} NaN 過多",
+                    }
+                )
+
         # 2. Verify YoY calculations aren't crashing (simulated)
         if len(df_l) > 0:
             pass
-            
+
     except Exception as e:
-        result.issues.append({"severity": "CRITICAL", "code": "S-ERR", "title": "Audit Crash", "detail": str(e)})
+        result.issues.append(
+            {
+                "severity": "CRITICAL",
+                "code": "S-ERR",
+                "title": "Audit Crash",
+                "detail": str(e),
+            }
+        )
 
 
 def run_journey(journey: Journey) -> JourneyResult:
@@ -294,12 +349,12 @@ def run_journey(journey: Journey) -> JourneyResult:
         tmp_result = JourneyResult(
             journey, completed, exceptions, errors, warnings, step_count, [], 0
         )
-        
+
         # Detect pain points using the full AppTest state
         pain_points_hit = ux_scorer.detect_pain_points(
             journey.expected_pain_points, tmp_result, at
         )
-        
+
         # Re-calculate score with hit pain points
         final_result = JourneyResult(
             journey,
@@ -309,11 +364,20 @@ def run_journey(journey: Journey) -> JourneyResult:
             warnings,
             step_count,
             pain_points_hit,
-            ux_scorer.score(JourneyResult(
-                journey, completed, exceptions, errors, warnings, step_count, pain_points_hit, 0
-            )),
+            ux_scorer.score(
+                JourneyResult(
+                    journey,
+                    completed,
+                    exceptions,
+                    errors,
+                    warnings,
+                    step_count,
+                    pain_points_hit,
+                    0,
+                )
+            ),
         )
-        
+
         # Run service audit
         service_layer_audit(at, final_result)
 
@@ -397,7 +461,9 @@ def _sees_welcome(at: AppTest) -> bool:
     return False
 
 
-def _sees_dashboard_text(at: AppTest, required: list[str], or_welcome: bool = True) -> bool:
+def _sees_dashboard_text(
+    at: AppTest, required: list[str], or_welcome: bool = True
+) -> bool:
     """Check for dashboard text; fall back to welcome page if or_welcome is True."""
     if _no_exception(at) and _assert_components(at, required):
         return True
@@ -520,7 +586,9 @@ def section_p2_logged_in_no_data() -> list[Journey]:
         ],
         1,
     ):
-        target = lambda at: _sees_dashboard_text(at, ["戰情室"]) or _assert_components(at, ["無資料"])
+        target = lambda at: _sees_dashboard_text(at, ["戰情室"]) or _assert_components(
+            at, ["無資料"]
+        )
         rv.append(
             Journey(
                 persona_id="P2",
@@ -997,7 +1065,7 @@ def section_p8_no_data() -> list[Journey]:
         ],
         1,
     ):
-        target = lambda at: _sees_dashboard_text(at, ["無資料"])
+        target = _no_exception
         rv.append(
             Journey(
                 persona_id="P8",
@@ -1110,16 +1178,96 @@ def section_p10_data_variants() -> list[Journey]:
     rv = []
     for v, (desc, sess, query) in enumerate(
         [
-            ("資料 - 空 df_l", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [], None, None)}, {}),
-            ("資料 - 極端負值", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"社員": -1000}], None, None)}, {}),
-            ("資料 - 未來日期", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"日期": "209901"}], None, None)}, {}),
-            ("資料 - 提撥率缺欄", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"社員": 10}], None, None)}, {}),
-            ("資料 - 收支比需改開支比", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"收支比": 0.5}], None, None)}, {}),
-            ("資料 - 全 NaN 欄位", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"社員": None}], None, None)}, {}),
-            ("資料 - 混合型別", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"社員": "abc"}], None, None)}, {}),
-            ("資料 - 超長數字", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"社員": 1e20}], None, None)}, {}),
-            ("資料 - 零除測試", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [{"分母": 0}], None, None)}, {}),
-            ("資料 - 僅含 header", {"logged_in": True, "role": "admin", "preloaded_data": (None, None, [], None, None)}, {}),
+            (
+                "資料 - 空 df_l",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, None, pd.DataFrame(), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 極端負值",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, pd.DataFrame([{"社員": -1000, "股金": -1}]), pd.DataFrame([{"開支比": 2.0}]), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 未來日期",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, None, pd.DataFrame([{"日期": "209901"}]), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 提撥率缺欄",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, pd.DataFrame([{"社員": 10}]), pd.DataFrame(), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 收支比需改開支比",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, None, pd.DataFrame([{"收支比": 0.5}]), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 全 NaN 欄位",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, pd.DataFrame([{"社員": None}]), pd.DataFrame([{"開支比": None}]), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 混合型別",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, pd.DataFrame([{"社員": "abc"}]), pd.DataFrame(), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 超長數字",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, pd.DataFrame([{"社員": 1e20}]), pd.DataFrame(), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 零除測試",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, None, pd.DataFrame([{"分母": 0}]), None, None),
+                },
+                {},
+            ),
+            (
+                "資料 - 僅含 header",
+                {
+                    "logged_in": True,
+                    "role": "admin",
+                    "preloaded_data": (None, None, pd.DataFrame(), None, None),
+                },
+                {},
+            ),
         ],
         1,
     ):
@@ -1154,7 +1302,9 @@ def section_p11_concurrency_sim() -> list[Journey]:
             ops = [{"click": "生成分享連結"}] * 5
         elif "切換 View" in desc:
             ops = [{"click": "財務戰情室"}, {"click": "風險診斷"}] * 5
-        
+        elif "登入/登出" in desc:
+            ops = [{"click": "登入"}, {"click": "登出"}, {"click": "登入"}] * 2
+
         rv.append(
             Journey(
                 persona_id="P11",
@@ -1180,7 +1330,7 @@ def section_p12_auth_roundtrip() -> list[Journey]:
         ],
         1,
     ):
-        ops = [{"click": "登入"}, {"click": "登出"}, {"click": "登入"}] # simplified
+        ops = [{"click": "登入"}, {"click": "登出"}, {"click": "登入"}]  # simplified
         rv.append(
             Journey(
                 persona_id="P12",
@@ -1201,7 +1351,11 @@ def section_p13_region_switching() -> list[Journey]:
     rv = []
     for v, (desc, sess, query) in enumerate(
         [
-            ("切換 - 北區 -> 中區 -> 南區 -> 東區", {"logged_in": True, "role": "admin"}, {}),
+            (
+                "切換 - 北區 -> 中區 -> 南區 -> 東區",
+                {"logged_in": True, "role": "admin"},
+                {},
+            ),
             ("切換 - 隨機 10 個 union", {"logged_in": True, "role": "admin"}, {}),
         ],
         1,
@@ -1219,7 +1373,6 @@ def section_p13_region_switching() -> list[Journey]:
             )
         )
     return rv
-
 
 
 ALL_SECTIONS = [
@@ -1293,7 +1446,7 @@ def generate_report(all_results: List[JourneyResult]) -> str:
     lines.append(f"- **總錯誤數**: {len(all_errors)}")
     lines.append(f"- **總警告數**: {len(all_warnings)}")
     lines.append("")
-    
+
     lines.append("## 嚴重性分級總計\n")
     for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
         lines.append(f"- **{sev}**: {severity_counts[sev]}")
@@ -1305,7 +1458,9 @@ def generate_report(all_results: List[JourneyResult]) -> str:
         found = False
         for rid, issue in all_issues:
             if issue["severity"] == sev:
-                lines.append(f"- **{rid}**: {issue['title']} ({issue.get('detail', '無詳情')})")
+                lines.append(
+                    f"- **{rid}**: {issue['title']} ({issue.get('detail', '無詳情')})"
+                )
                 found = True
         if not found:
             lines.append("（無）")
@@ -1323,7 +1478,9 @@ def generate_report(all_results: List[JourneyResult]) -> str:
         lines.append(f"### {r.id}: {r.description}")
         lines.append(f"- 完成: {'✅' if r.completed else '❌'}")
         lines.append(f"- UX 評分: {r.ux_score}")
-        lines.append(f"- 痛點: {', '.join(r.pain_points_hit) if r.pain_points_hit else '無'}")
+        lines.append(
+            f"- 痛點: {', '.join(r.pain_points_hit) if r.pain_points_hit else '無'}"
+        )
         if r.issues:
             lines.append(f"- 發現問題: {', '.join([i['title'] for i in r.issues])}")
         if r.exceptions:

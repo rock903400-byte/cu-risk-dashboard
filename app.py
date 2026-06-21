@@ -57,6 +57,7 @@ _DEFAULTS = {
     "preload_err": None,
     "preload_csv_err": None,
     "share_generating": False,
+    "latest_share_url": None,
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -260,7 +261,11 @@ if IS_ADMIN:
             st.markdown(
                 '<span class="sidebar-label">🔗 分享功能</span>', unsafe_allow_html=True
             )
-            if st.button("🚀 生成分享連結", use_container_width=True, disabled=("share_generating" in st.session_state and st.session_state["share_generating"])):
+            if st.button(
+                "🚀 生成分享連結",
+                use_container_width=True,
+                disabled=st.session_state["share_generating"],
+            ):
                 st.session_state["share_generating"] = True
                 try:
                     if not supabase:
@@ -289,9 +294,11 @@ if IS_ADMIN:
                             st.session_state["latest_share_url"] = (
                                 f"{CONFIG['APP_BASE_URL']}/?{'&'.join(params)}"
                             )
+                except Exception as e:
+                    st.error(f"❌ 上傳失敗：{e}")
                 finally:
                     st.session_state["share_generating"] = False
-            if "latest_share_url" in st.session_state:
+            if st.session_state["latest_share_url"]:
                 st.code(st.session_state["latest_share_url"], language="text")
 
 if not data_loaded:
