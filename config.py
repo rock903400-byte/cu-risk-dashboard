@@ -92,7 +92,6 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 [data-testid="stMainBlockContainer"] {{
     max-width: 100% !important;
-    margin-left: 0 !important;
     padding-top: 4rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
@@ -160,20 +159,54 @@ html, body, [data-testid="stAppViewContainer"] {{
         }}
     }}
 }}
-[data-testid="stSidebar"] {{ background-color: #1E293B !important; position: fixed !important; top: 0; left: 0; height: 100vh; z-index: 9999 !important; transform: translateX(-100%); transition: transform 0.3s ease !important; box-shadow: 4px 0 20px rgba(0,0,0,0.2); min-width: 300px !important; width: 320px !important; }}
-[data-testid="stSidebar"][aria-expanded="true"] {{ transform: translateX(0) !important; }}
-[data-testid="stSidebar"] > div:first-child {{ height: 100vh; overflow-y: auto; }}
-[data-testid="collapsedControl"] {{ display: block !important; position: fixed !important; top: 0.5rem; left: 0.5rem; z-index: 10000 !important; background: #1E293B !important; color: #E2E8F0 !important; border: 1px solid #475569 !important; border-radius: 8px !important; padding: 0.25rem 0.5rem !important; }}
-.sidebar-overlay {{ display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; }}
-.sidebar-overlay.visible {{ display: block; }}
+[data-testid="stSidebar"] {{ background-color: #1E293B !important; min-width: 280px !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
 [data-testid="stSidebar"] hr {{ border-color: #334155 !important; margin: 1.5rem 0 !important; }}
 
-/* 手機版：側邊欄寬度調整 */
+/* 手機版：側邊欄抽屜式 */
 @media (max-width: 640px) {{
     [data-testid="stSidebar"] {{
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
         width: 85vw !important;
         max-width: 320px !important;
+        z-index: 9999 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease !important;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+    }}
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        transform: translateX(0) !important;
+    }}
+    [data-testid="stSidebar"] > div:first-child {{
+        height: 100vh;
+        overflow-y: auto;
+    }}
+    /* 側邊欄開關按鈕 */
+    [data-testid="collapsedControl"] {{
+        display: block !important;
+        position: fixed !important;
+        top: 1rem;
+        left: 1rem;
+        z-index: 10000 !important;
+        background: #1E293B !important;
+        color: #E2E8F0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+    }}
+    /* 遮罩層 */
+    .sidebar-overlay {{
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9998;
+    }}
+    .sidebar-overlay.visible {{
+        display: block;
     }}
 }}
 [data-testid="stSidebar"] .stButton > button {{
