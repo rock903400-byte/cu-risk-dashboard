@@ -129,7 +129,9 @@ def run_probe(probe: Dict[str, Any]) -> Dict[str, Any]:
 
         # Security: check if payload is reflected without encoding
         if probe["category"] in ("Security", "EdgeCase"):
-            payload = probe["url"].split("?file=", 1)[-1] if "?file=" in probe["url"] else ""
+            payload = (
+                probe["url"].split("?file=", 1)[-1] if "?file=" in probe["url"] else ""
+            )
             if payload and payload in text:
                 issues.append({"severity": "HIGH", "title": "XSS Reflection"})
 

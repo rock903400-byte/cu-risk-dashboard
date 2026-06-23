@@ -50,9 +50,11 @@ def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str
         return f"{v:,.0f}"
 
     text_list = [
-        _fmt(abs(v)) if m == "relative" and v < 0
-        else _fmt(v) if m != "total"
-        else _fmt(net)
+        (
+            _fmt(abs(v))
+            if m == "relative" and v < 0
+            else _fmt(v) if m != "total" else _fmt(net)
+        )
         for v, m in zip(values, measures)
     ]
 

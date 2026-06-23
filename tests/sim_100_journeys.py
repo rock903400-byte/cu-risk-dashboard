@@ -1192,7 +1192,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, pd.DataFrame([{"社員": -1000, "股金": -1}]), pd.DataFrame([{"開支比": 2.0}]), None, None),
+                    "preloaded_data": (
+                        None,
+                        pd.DataFrame([{"社員": -1000, "股金": -1}]),
+                        pd.DataFrame([{"開支比": 2.0}]),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1201,7 +1207,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, None, pd.DataFrame([{"日期": "209901"}]), None, None),
+                    "preloaded_data": (
+                        None,
+                        None,
+                        pd.DataFrame([{"日期": "209901"}]),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1210,7 +1222,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, pd.DataFrame([{"社員": 10}]), pd.DataFrame(), None, None),
+                    "preloaded_data": (
+                        None,
+                        pd.DataFrame([{"社員": 10}]),
+                        pd.DataFrame(),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1219,7 +1237,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, None, pd.DataFrame([{"收支比": 0.5}]), None, None),
+                    "preloaded_data": (
+                        None,
+                        None,
+                        pd.DataFrame([{"收支比": 0.5}]),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1228,7 +1252,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, pd.DataFrame([{"社員": None}]), pd.DataFrame([{"開支比": None}]), None, None),
+                    "preloaded_data": (
+                        None,
+                        pd.DataFrame([{"社員": None}]),
+                        pd.DataFrame([{"開支比": None}]),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1237,7 +1267,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, pd.DataFrame([{"社員": "abc"}]), pd.DataFrame(), None, None),
+                    "preloaded_data": (
+                        None,
+                        pd.DataFrame([{"社員": "abc"}]),
+                        pd.DataFrame(),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1246,7 +1282,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, pd.DataFrame([{"社員": 1e20}]), pd.DataFrame(), None, None),
+                    "preloaded_data": (
+                        None,
+                        pd.DataFrame([{"社員": 1e20}]),
+                        pd.DataFrame(),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
@@ -1255,7 +1297,13 @@ def section_p10_data_variants() -> list[Journey]:
                 {
                     "logged_in": True,
                     "role": "admin",
-                    "preloaded_data": (None, None, pd.DataFrame([{"分母": 0}]), None, None),
+                    "preloaded_data": (
+                        None,
+                        None,
+                        pd.DataFrame([{"分母": 0}]),
+                        None,
+                        None,
+                    ),
                 },
                 {},
             ),
