@@ -159,7 +159,8 @@ html, body, [data-testid="stAppViewContainer"] {{
         }}
     }}
 }}
-[data-testid="stSidebar"] {{ background-color: #1E293B !important; min-width: 280px !important; }}
+[data-testid="stSidebar"] {{ background-color: #1E293B !important; }}
+[data-testid="stSidebar"][aria-expanded="true"] {{ min-width: 280px !important; }}
 [data-testid="stSidebar"] * {{ color: #E2E8F0 !important; }}
 [data-testid="stSidebar"] hr {{ border-color: #334155 !important; margin: 1.5rem 0 !important; }}
 
