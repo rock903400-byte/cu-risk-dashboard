@@ -7,6 +7,8 @@ def safe_div(n, d):
         return 0.0
     if n is None or pd.isna(n):
         return 0.0
+    if isinstance(n, (str, bool)) or isinstance(d, (str, bool)):
+        return 0.0
     try:
         n_f = float(n)
         d_f = float(d)
@@ -21,7 +23,7 @@ def format_large_number(n, decimals=2):
     try:
         n_f = float(n)
     except:
-        return str(n)
+        return "—"
     if pd.isna(n_f) or not math.isfinite(n_f):
         return "—"
     if abs(n_f) >= 1e8:

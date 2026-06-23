@@ -50,7 +50,6 @@ def render_kpi_cards(annual_agg: pd.DataFrame, prev_agg: pd.DataFrame | None):
         "💸 年度總支出（新台幣）",
         format_large_number(expense),
         fmt_yoy(yoy_exp),
-        delta_color="inverse",
         help="與去年同期的變化。正值＝增加,負值＝減少。\n支出減少是好事。",
     )
     c3.metric(

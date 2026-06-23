@@ -11,6 +11,8 @@ def convert_minguo_date(val):
     except:
         pass
     s = str(val).strip()
+    if s.endswith(".0"):
+        s = s[:-2]
     s = "".join(ch for ch in s if ch.isdigit() or ch == "-")
     if not s:
         return pd.NaT

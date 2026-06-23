@@ -784,7 +784,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         "負債比（總負債／總資產）",
                         f"{dr:.1%}",
                         delta=delta_dr,
-                        delta_color="inverse",
                     )
                     lv = rate_ratio(dr, "debt_ratio")
                     if lv == "green":
@@ -844,7 +843,6 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         "開支比（總支出／總收入）",
                         f"{xr:.1%}",
                         delta=delta_xr,
-                        delta_color="inverse",
                     )
                     lv = rate_ratio(xr, "expense_ratio")
                     if lv == "green":
