@@ -134,8 +134,10 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         curr_eOvd = _get_value(ls, "逾放比", max_d)
         curr_R = _get_value(ls, "開支比", max_d)
         eOvd_12m = _get_value(ls, "逾放比", T_12M)
-        memG_curr = safe_div(curr_M - M0, M0)
-        shrG_curr = safe_div(curr_S - S0, S0)
+        M_12m = _get_value(ms, "社員數", T_12M)
+        S_12m = _get_value(ms, "股金", T_12M)
+        memG_curr = safe_div(curr_M - M_12m, M_12m)
+        shrG_curr = safe_div(curr_S - S_12m, S_12m)
 
         rows.append(
             {
@@ -145,7 +147,7 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
                 "診斷狀態": status,
                 "建議留意事項": reason,
                 "現有社員": curr_M,
-                "社員成長數(12M)": curr_M - M0,
+                "社員成長數(12M)": curr_M - M_12m,
                 "社員成長率(12M)": memG_curr,
                 "現有股金": curr_S,
                 "股金成長率(12M)": shrG_curr,
@@ -156,8 +158,8 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
                 "開支比": curr_R,
                 "開支比(年)": R0,
                 "提撥率": float(ls.iloc[-1]["提撥率"]) if not ls.empty else 0.0,
-                "_sM": M0,
-                "_sS": S0,
+                "_sM": M_12m,
+                "_sS": S_12m,
             }
         )
 

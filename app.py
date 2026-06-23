@@ -170,7 +170,6 @@ if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
         else:
             # Admin 模式
             st.session_state["is_district_office"] = False
-            region_map = region_map
 
         data_loaded = True
 

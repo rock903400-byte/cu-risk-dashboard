@@ -780,7 +780,12 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         if prev_ratios
                         else None
                     )
-                    st.metric("負債比（總負債／總資產）", f"{dr:.1%}", delta=delta_dr)
+                    st.metric(
+                        "負債比（總負債／總資產）",
+                        f"{dr:.1%}",
+                        delta=delta_dr,
+                        delta_color="inverse",
+                    )
                     lv = rate_ratio(dr, "debt_ratio")
                     if lv == "green":
                         st.success("✅ 負債比正常，財務結構穩健。")
@@ -835,7 +840,12 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         if prev_ratios
                         else None
                     )
-                    st.metric("開支比（總支出／總收入）", f"{xr:.1%}", delta=delta_xr)
+                    st.metric(
+                        "開支比（總支出／總收入）",
+                        f"{xr:.1%}",
+                        delta=delta_xr,
+                        delta_color="inverse",
+                    )
                     lv = rate_ratio(xr, "expense_ratio")
                     if lv == "green":
                         st.success("✅ 開支比正常，收支控制良好。")

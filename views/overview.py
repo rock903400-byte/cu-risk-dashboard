@@ -105,12 +105,14 @@ def render_overview_page(
             f"{avg_label}開支比",
             f"{curr_開支比_avg:.2%}",
             _yoy_str(curr_開支比_avg, prev_開支比_avg),
+            delta_color="inverse",
             help="與去年同期相比的變化。開支比越低代表財務越健康。",
         )
         c4.metric(
             f"{avg_label}逾放比",
             f"{curr_逾放比_avg:.2%}",
             _yoy_str(curr_逾放比_avg, prev_逾放比_avg),
+            delta_color="inverse",
             help="與去年同期相比的變化。逾放比越低代表放款品質越好。",
         )
 

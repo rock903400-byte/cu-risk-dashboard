@@ -24,6 +24,8 @@ def calc_lending_rate_monthly_avg(df: pd.DataFrame, year: str) -> float | None:
         return None
     y_df["年月_period"] = y_df["年月_dt"].dt.to_period("M")
 
+    num_months = y_df["年月_period"].nunique()
+
     int_inc = (
         y_df[y_df["會計科目"].astype(str).str.startswith("410")]
         .groupby("年月_period")["當月金額"]
@@ -41,6 +43,10 @@ def calc_lending_rate_monthly_avg(df: pd.DataFrame, year: str) -> float | None:
         return None
 
     rate = safe_div(int_inc, loan_bal)
+
+    if num_months > 0 and num_months < 12:
+        rate = rate * (12 / num_months)
+
     return rate
 
 
