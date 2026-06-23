@@ -1,26 +1,14 @@
 import html
-import logging
 
 import streamlit as st
 
 from config import safe_secrets
 
-logger = logging.getLogger(__name__)
-
 
 def handle_login(max_attempts: int):
     entered = st.session_state.get("pwd_input", "").strip()
-    _secrets = safe_secrets()
-    admin_pw = str(_secrets.get("admin_password", ""))
+    admin_pw = str(safe_secrets().get("admin_password", ""))
     pws = st.session_state.get("preloaded_passwords", {})
-
-    logger.warning(
-        f"DBG_LOGIN: entered={entered!r} "
-        f"admin_pw_len={len(admin_pw)} "
-        f"admin_pw_repr={admin_pw!r} "
-        f"in_pws={entered in pws} "
-        f"keys={list(_secrets.keys())}"
-    )
 
     if entered in pws:
         info = pws[entered]
