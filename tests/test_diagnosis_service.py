@@ -72,6 +72,25 @@ class TestCalcRatios:
         assert r["expense_ratio"] == 0.0
         assert r["net_income"] == 0.0
 
+    def test_nan_amounts_does_not_propagate(self):
+        """當月金額含 NaN 時，sum 不應傳出 NaN（導致下游 safe_div 失效）"""
+        df = pd.DataFrame(
+            {
+                "會計科目": ["1101", "2101", "3101", "4101", "5101"],
+                "會科名稱": ["現金", "存款負債", "股金", "利息收入", "利息支出"],
+                "當月金額": [1000.0, float("nan"), 400.0, 500.0, 300.0],
+            }
+        )
+        r = calc_ratios(df)
+        assert not math.isnan(r["debt_ratio"])
+        assert not math.isnan(r["equity_ratio"])
+        assert not math.isnan(r["expense_ratio"])
+        assert not math.isnan(r["net_income"])
+        assert not math.isnan(r["total_assets"])
+        assert not math.isnan(r["total_income"])
+        assert not math.isnan(r["total_expense"])
+        assert r["net_income"] == 200
+
 
 class TestCalcTrend:
 

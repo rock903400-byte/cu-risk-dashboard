@@ -121,6 +121,12 @@ class TestGetAnnualSnapshot:
         income = result[result["會計科目"] == "4101"]["當月金額"].iloc[0]
         assert income == pytest.approx(500 * 4)
 
+    def test_same_months_empty_does_not_crash(self):
+        """same_months=[] 邊界：guard 直接回空 DF（不 crash、不產 NaN snapshot）"""
+        df = _make_analysis_df()
+        result = get_annual_snapshot(df, "112", same_months=[])
+        assert result.empty
+
 
 class TestCalcYoyPct:
     def test_positive_growth(self):

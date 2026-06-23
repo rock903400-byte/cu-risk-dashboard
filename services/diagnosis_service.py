@@ -71,6 +71,19 @@ _YOY_RULES = [
 
 
 def calc_ratios(annual_agg: pd.DataFrame) -> dict:
+    if annual_agg.empty:
+        return {
+            "debt_ratio": 0.0,
+            "equity_ratio": 0.0,
+            "expense_ratio": 0.0,
+            "net_income": 0,
+            "total_assets": 0,
+            "total_income": 0,
+            "total_expense": 0,
+            "avg_rate": 0.0,
+        }
+    annual_agg = annual_agg.copy()
+    annual_agg["當月金額"] = annual_agg["當月金額"].fillna(0)
     codes = annual_agg["會計科目"].astype(str)
     total_assets = annual_agg[codes.str.startswith("1")]["當月金額"].sum()
     total_liabs = annual_agg[codes.str.startswith("2")]["當月金額"].sum()

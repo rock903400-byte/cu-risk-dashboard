@@ -7,7 +7,7 @@ from config import safe_secrets
 
 def handle_login(max_attempts: int):
     entered = st.session_state.get("pwd_input", "").strip()
-    admin_pw = str(safe_secrets().get("admin_password", ""))
+    admin_pw = str(safe_secrets().get("admin_password", "")).strip()
     pws = st.session_state.get("preloaded_passwords", {})
 
     if entered in pws:

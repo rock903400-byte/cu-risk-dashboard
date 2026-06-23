@@ -89,3 +89,13 @@ class TestHandleLogin:
         with _mock_secrets("admin"):
             handle_login(5)
         assert st.session_state["logged_in"] is False
+
+    def test_admin_password_whitespace_stripped(self):
+        """admin_pw 含前後空白時，entered.strip() 應能匹配（避免 Dashboard 貼 secret 帶空白導致登入失敗）"""
+        _init_state()
+        st.session_state["pwd_input"] = "admin"
+        st.session_state["preloaded_passwords"] = {}
+        with _mock_secrets("  admin  "):
+            handle_login(5)
+        assert st.session_state["logged_in"] is True
+        assert st.session_state["role"] == "admin"

@@ -20,6 +20,8 @@ def get_annual_snapshot(
         return pd.DataFrame()
 
     if same_months is not None:
+        if not same_months:
+            return pd.DataFrame()
         month_suffixes = {m[-2:] for m in same_months}
         y_df_bs_scope = y_df[y_df["年月"].str[-2:].isin(month_suffixes)]
         latest_m = y_df_bs_scope["年月"].max()
