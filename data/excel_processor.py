@@ -15,7 +15,7 @@ from common.classifier import classify
 from common.cleaning import defensive_clean_series
 
 
-_CACHE_VER = "v4"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
+_CACHE_VER = "v7"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
 
 
 @st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
@@ -65,9 +65,11 @@ def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
         pd.to_numeric(df_l_raw["開支比"], errors="coerce").fillna(0), "開支比"
     )
     if "提撥率" in df_l_raw.columns:
+        _no_ovd_mask = df_l_raw["提撥率"].astype(str).str.contains("無逾期", na=False)
         df_l_raw["提撥率"] = pd.to_numeric(df_l_raw["提撥率"], errors="coerce").fillna(
             0
         )
+        df_l_raw.loc[_no_ovd_mask, "提撥率"] = -1.0
     else:
         df_l_raw["提撥率"] = 0.0
 

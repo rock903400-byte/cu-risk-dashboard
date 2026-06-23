@@ -128,46 +128,51 @@ region_data = None
 _pd = st.session_state["preloaded_data"]
 if _pd and isinstance(_pd, (tuple, list)) and len(_pd) == 5:
     data, df_m, df_l, raw_bytes, region_map = _pd
-    region = st.session_state["assigned_region"]
-    union = st.session_state["assigned_union"]
-
-    if region:
-        # 取得該區域內所有實際有財報的社名（去 NaN 以容錯真實 Excel 空白）
-        region_data = data[data["區域"] == region].copy()
-        actual_unions_in_reg = set(region_data["社名"].dropna().unique())
-
-        # 建立 strip 後的對照表，容錯真實 Excel 空白/全半形差異
-        _norm_to_orig = {
-            u.strip(): u for u in actual_unions_in_reg if isinstance(u, str)
-        }
-        _target = (union or "").strip()
-
-        if _target and _target in _norm_to_orig:
-            # 【個社模式】：登入名稱是一個實際存在的社
-            data = data[data["社名"] == _norm_to_orig[_target]].copy()
-            st.session_state["is_district_office"] = False
-        else:
-            # 【區會模式】：登入名稱不在財報清單中，視為管理單位
-            st.session_state["is_district_office"] = True
-            if union:
-                st.warning(
-                    f"⚠️ 找不到『{union}』，已切換為 {region} 區會模式；"
-                    "請聯絡管理員更新資料。"
-                )
-            if region_data.empty:
-                st.warning("該區目前尚無報表資料，請先上傳資料庫。")
-                st.stop()
-            data = region_data.copy()
-
-        target_snos = data["社號"].unique()
-        df_m = df_m[df_m["社號"].isin(target_snos)].copy()
-        df_l = df_l[df_l["社號"].isin(target_snos)].copy()
+    if data is None or df_m is None or df_l is None:
+        st.warning("⚠️ 預載資料不完整（部分欄位為空），請重新上傳或聯絡管理員。")
+        data = df_m = df_l = region_map = None
+        data_loaded = False
     else:
-        # Admin 模式
-        st.session_state["is_district_office"] = False
-        region_map = region_map
+        region = st.session_state["assigned_region"]
+        union = st.session_state["assigned_union"]
 
-    data_loaded = True
+        if region:
+            # 取得該區域內所有實際有財報的社名（去 NaN 以容錯真實 Excel 空白）
+            region_data = data[data["區域"] == region].copy()
+            actual_unions_in_reg = set(region_data["社名"].dropna().unique())
+
+            # 建立 strip 後的對照表，容錯真實 Excel 空白/全半形差異
+            _norm_to_orig = {
+                u.strip(): u for u in actual_unions_in_reg if isinstance(u, str)
+            }
+            _target = (union or "").strip()
+
+            if _target and _target in _norm_to_orig:
+                # 【個社模式】：登入名稱是一個實際存在的社
+                data = data[data["社名"] == _norm_to_orig[_target]].copy()
+                st.session_state["is_district_office"] = False
+            else:
+                # 【區會模式】：登入名稱不在財報清單中，視為管理單位
+                st.session_state["is_district_office"] = True
+                if union:
+                    st.warning(
+                        f"⚠️ 找不到『{union}』，已切換為 {region} 區會模式；"
+                        "請聯絡管理員更新資料。"
+                    )
+                if region_data.empty:
+                    st.warning("該區目前尚無報表資料，請先上傳資料庫。")
+                    st.stop()
+                data = region_data.copy()
+
+            target_snos = data["社號"].unique()
+            df_m = df_m[df_m["社號"].isin(target_snos)].copy()
+            df_l = df_l[df_l["社號"].isin(target_snos)].copy()
+        else:
+            # Admin 模式
+            st.session_state["is_district_office"] = False
+            region_map = region_map
+
+        data_loaded = True
 
 if st.session_state["preloaded_csv"]:
     df_csv_full, raw_csv_bytes = st.session_state["preloaded_csv"]

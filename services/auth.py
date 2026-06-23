@@ -7,20 +7,20 @@ from config import safe_secrets
 
 def handle_login(max_attempts: int):
     entered = st.session_state.get("pwd_input", "").strip()
-    admin_pw = str(safe_secrets().get("admin_password", "666"))
+    admin_pw = str(safe_secrets().get("admin_password", ""))
     pws = st.session_state.get("preloaded_passwords", {})
 
-    if entered == admin_pw:
-        st.session_state.update(
-            logged_in=True, role="admin", assigned_region=None, assigned_union=None
-        )
-    elif entered in pws:
+    if entered in pws:
         info = pws[entered]
         st.session_state.update(
             logged_in=True,
             role="viewer",
             assigned_union=info["name"],
             assigned_region=info["region"],
+        )
+    elif entered == admin_pw and admin_pw:
+        st.session_state.update(
+            logged_in=True, role="admin", assigned_region=None, assigned_union=None
         )
     else:
         st.session_state["login_attempts"] += 1

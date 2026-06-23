@@ -91,7 +91,9 @@ def calc_ratios(annual_agg: pd.DataFrame) -> dict:
     }
 
 
-def rate_ratio(value: float, key: str) -> str:
+def rate_ratio(value: float | None, key: str) -> str:
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return "gray"
     t = THRESHOLDS[key]
     if key == "equity_ratio":
         if value <= t["red"]:

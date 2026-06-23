@@ -188,6 +188,26 @@ class TestPrepareWaterfallData:
         result = prepare_waterfall_data(df)
         assert result["net"] == pytest.approx(-5000)
 
+    def test_positive_expense_is_normalized_to_negative(self):
+        """回歸測試：線上資料費用若為正值，瀑布圖仍須往下扣減"""
+        df = pd.DataFrame(
+            [
+                {"會計科目": "4101", "會科名稱": "利息收入", "當月金額": 10000},
+                {"會計科目": "5101", "會科名稱": "利息支出", "當月金額": 3000},
+                {"會計科目": "5201", "會科名稱": "用人費用", "當月金額": 2000},
+            ]
+        )
+        result = prepare_waterfall_data(df)
+        relative_values = [
+            v for v, m in zip(result["values"], result["measures"]) if m == "relative"
+        ]
+        assert all(
+            v < 0 for v in relative_values
+        ), f"正值費用須 normalize 為負,實際:{relative_values}"
+        assert result["net"] == pytest.approx(10000 - 3000 - 2000)
+        assert result["labels"][0] == "總收入"
+        assert result["values"][0] == pytest.approx(10000)
+
 
 class TestDetectYoyAnomalies:
     def _make_pair(self, curr_amount, prev_amount):

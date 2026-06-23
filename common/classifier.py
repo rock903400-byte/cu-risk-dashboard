@@ -1,4 +1,14 @@
+import math
+
+
 def classify(p, thresholds):
+    for _k in [
+        "eOvd", "eLoan", "R0", "R1", "memG", "shrG",
+        "M0", "M1", "M2", "M3", "S0", "S1", "S2", "S3",
+    ]:
+        _v = p.get(_k)
+        if _v is None or (isinstance(_v, float) and math.isnan(_v)):
+            return "⏸️ 資料不足", "部分關鍵指標缺失，暫無法判定"
     T = thresholds
 
     c1 = p["R0"] > T["high_risk_income_ratio"] and p["R1"] > T["high_risk_income_ratio"]

@@ -603,7 +603,12 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
             st.warning("無資料可供展示。")
         else:
             analysis_df = union_df[union_df["社名"] == selected_union].copy()
-            annual_agg = get_annual_snapshot(analysis_df, selected_year)
+            curr_months_list = sorted(
+                analysis_df[analysis_df["年度"] == selected_year]["年月"].unique()
+            )
+            annual_agg = get_annual_snapshot(
+                analysis_df, selected_year, same_months=curr_months_list
+            )
 
             curr_idx = (
                 all_years.index(selected_year) if selected_year in all_years else -1
@@ -614,7 +619,9 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                 else None
             )
             prev_agg = (
-                get_annual_snapshot(analysis_df, prev_year) if prev_year else None
+                get_annual_snapshot(analysis_df, prev_year, same_months=curr_months_list)
+                if prev_year
+                else None
             )
 
             if not annual_agg.empty:
@@ -787,6 +794,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         st.warning(
                             "⚠️ 負債比偏高（80–90%），建議控制新增舉債，逐步改善資本結構。"
                         )
+                    elif lv == "gray":
+                        st.info("ℹ️ 資料不足，無法評估負債比。")
                     else:
                         st.error(
                             "🚨 負債比過高（> 90%），自有資金嚴重不足，建議優先降低負債。"
@@ -812,6 +821,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         st.warning(
                             "⚠️ 淨值比偏低（10–20%），建議減少股金退還，加強留存盈餘。"
                         )
+                    elif lv == "gray":
+                        st.info("ℹ️ 資料不足，無法評估淨值比。")
                     else:
                         st.error(
                             "🚨 淨值比嚴重不足（< 10%），資本適足性警示，建議優先增資或盈餘轉增資。"
@@ -836,6 +847,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                         st.success("✅ 開支比正常，收支控制良好。")
                     elif lv == "yellow":
                         st.warning("⚠️ 開支比偏高（95–105%），建議適度控制費用支出。")
+                    elif lv == "gray":
+                        st.info("ℹ️ 資料不足，無法評估開支比。")
                     else:
                         st.error(
                             "🚨 開支比超標（> 105%），本年度入不敷出，建議全面檢視收支。"
@@ -887,6 +900,8 @@ def render_war_room_page(df_csv: pd.DataFrame, is_admin: bool, config: dict):
                             return "background-color: #DCFCE7; color: #166534"
                         if lv == "yellow":
                             return "background-color: #FEF9C3; color: #854D0E"
+                        if lv == "gray":
+                            return "background-color: #F1F5F9; color: #475569"
                         return "background-color: #FEE2E2; color: #991B1B"
 
                     def _net_color(val):

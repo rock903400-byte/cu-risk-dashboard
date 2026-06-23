@@ -69,18 +69,14 @@ def render_overview_page(
             max_d = pd.NaT
             T_12M = pd.NaT
             prev_逾放比_avg = float("nan")
-            T0_dec = pd.NaT
-            T1_dec = None
             prev_開支比_avg = float("nan")
         else:
             max_d = df_l["年月"].max()
             T_12M = max_d - pd.DateOffset(months=12)
             prev_逾放比_avg = df_l[df_l["年月"] == T_12M]["逾放比"].mean()
-            T0_dec = df_l[df_l["年月"].dt.month == 12]["年月"].max()
-            T1_dec = T0_dec - pd.DateOffset(years=1) if pd.notna(T0_dec) else None
             prev_開支比_avg = (
-                df_l[df_l["年月"] == T1_dec]["開支比"].mean()
-                if T1_dec is not None
+                df_l[df_l["年月"] == T_12M]["開支比"].mean()
+                if pd.notna(T_12M)
                 else float("nan")
             )
         curr_開支比_avg = avg_src["開支比(年)"].mean()
@@ -357,7 +353,7 @@ def render_overview_page(
             "逾放比(12M)": "{:.2%}",
             "逾放比": "{:.2%}",
             "開支比": "{:.2%}",
-            "提撥率": lambda x: "無逾期" if x == 0 else f"{x:.2%}",
+            "提撥率": lambda x: "無逾期" if x == -1 else f"{x:.2%}",
         }
 
         # 4 狀態對應 4 色（cell-level，僅標 診斷狀態 欄；一般狀態不上色）

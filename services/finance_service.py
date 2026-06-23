@@ -90,7 +90,8 @@ def prepare_waterfall_data(annual_agg: pd.DataFrame) -> dict:
         if g_name.startswith(("2", "3", "4.", "5.", "6", "7", "8")):
             clean = g_name.split(".", 1)[1] if "." in g_name else g_name
             labels.append(clean)
-            values.append(w_data[g_name])
+            raw_amt = w_data[g_name]
+            values.append(-abs(raw_amt))
             measures.append("relative")
 
     labels.append("年度損益")
