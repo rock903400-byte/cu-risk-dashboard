@@ -25,6 +25,8 @@ def get_annual_snapshot(
         month_suffixes = {m[-2:] for m in same_months}
         y_df_bs_scope = y_df[y_df["年月"].str[-2:].isin(month_suffixes)]
         latest_m = y_df_bs_scope["年月"].max()
+        if pd.isna(latest_m):
+            return pd.DataFrame()
     else:
         latest_m = y_df["年月"].max()
 
