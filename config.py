@@ -150,13 +150,9 @@ html, body, [data-testid="stAppViewContainer"] {{
 /* 手機版：4 欄自動疊疊為單欄 */
     [data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
         min-width: 0 !important;
-    }}
-    @media (max-width: 640px) {{
-        [data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            max-width: 100% !important;
-        }}
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
     }}
 }}
 [data-testid="stSidebar"] {{ background-color: #1E293B !important; }}

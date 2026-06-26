@@ -497,6 +497,10 @@ def render_overview_page(
                         if col == "開支比"
                         else plot_df
                     )
+                    if col == "提撥率":
+                        curr_df = curr_df.copy()
+                        curr_df.loc[curr_df["提撥率"] == -1.0, "提撥率"] = None
+
                     fig = px.line(
                         curr_df,
                         x="年月",
