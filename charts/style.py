@@ -39,3 +39,12 @@ def apply_chart_style(
         fixedrange=not interactive,
     )
     return fig
+
+
+DOWNLOAD_CONFIG = {
+    "displayModeBar": True,
+    "modeBarButtons": [["toImage"]],
+    "displaylogo": False,
+    "toImageButtonOptions": {"format": "png", "scale": 3},
+    "responsive": True,
+}

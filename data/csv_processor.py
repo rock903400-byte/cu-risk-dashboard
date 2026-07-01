@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 
-@st.cache_data(show_spinner="📑 正在解析 CSV 明細...")
+@st.cache_data(ttl=3600, show_spinner="📑 正在解析 CSV 明細...")
 def process_csv_final(file_bytes: bytes) -> pd.DataFrame:
     try:
         df = pd.read_csv(io.BytesIO(file_bytes), encoding="utf-8-sig")

@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 from common.classifier import classify_code
 from common.utils import format_large_number
 from services.finance_service import detect_yoy_anomalies, prepare_waterfall_data
+from charts.style import DOWNLOAD_CONFIG
 
 CATEGORY_COLORS = {
     "資產": "#10B981",
@@ -17,14 +18,6 @@ CATEGORY_COLORS = {
 }
 CATEGORY_TABS = ["💰 資產", "📉 負債", "⚖️ 權益", "💵 收入", "💸 支出"]
 CATEGORY_NAMES = ["資產", "負債", "權益", "收入", "支出"]
-
-_DOWNLOAD_CONFIG = {
-    "displayModeBar": True,
-    "modeBarButtons": [["toImage"]],
-    "displaylogo": False,
-    "toImageButtonOptions": {"format": "png", "scale": 3},
-    "responsive": True,
-}
 
 
 def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str):
@@ -83,7 +76,7 @@ def render_waterfall(annual_agg: pd.DataFrame, selected_year: str, theme_bg: str
         xaxis=dict(fixedrange=True),
         yaxis=dict(fixedrange=True),
     )
-    st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+    st.plotly_chart(fig, use_container_width=True, config=DOWNLOAD_CONFIG)
 
 
 def render_yoy_anomalies(
@@ -272,7 +265,7 @@ def render_ranking_tabs(
             fig.update_yaxes(
                 fixedrange=True, categoryorder="array", categoryarray=y_order
             )
-            st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+            st.plotly_chart(fig, use_container_width=True, config=DOWNLOAD_CONFIG)
 
 
 def render_yearly_trend(analysis_df: pd.DataFrame, theme_bg: str):
@@ -325,4 +318,4 @@ def render_yearly_trend(analysis_df: pd.DataFrame, theme_bg: str):
         yaxis=dict(fixedrange=True),
         yaxis2=dict(fixedrange=True),
     )
-    st.plotly_chart(fig, use_container_width=True, config=_DOWNLOAD_CONFIG)
+    st.plotly_chart(fig, use_container_width=True, config=DOWNLOAD_CONFIG)

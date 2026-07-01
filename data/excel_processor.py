@@ -18,7 +18,7 @@ from common.cleaning import defensive_clean_series
 _CACHE_VER = "v7"  # spinner 顯示用；真正 bust cache 的是函式內的 _VER，兩者都要 bump
 
 
-@st.cache_data(show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
+@st.cache_data(ttl=3600, show_spinner=f"🚀 正在執行智慧分析 ({_CACHE_VER})...")
 def process_excel_final(file_bytes: bytes, thresholds: dict, sheets: dict):
     _VER = "v7"  # bump when classifier.py logic changes; this string IS in bytecode
     try:
