@@ -118,9 +118,7 @@ def render_trend_tracker(
                     fig, title, is_pct, theme_bg=theme_bg, interactive=False
                 )
                 fig.update_layout(height=450)
-                st.plotly_chart(
-                    fig, use_container_width=True, config=DOWNLOAD_CONFIG
-                )
+                st.plotly_chart(fig, use_container_width=True, config=DOWNLOAD_CONFIG)
 
             trend("逾放比", "⚠️ 逾放比趨勢")
             trend("貸放比", "💰 貸放比趨勢")

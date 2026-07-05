@@ -97,9 +97,7 @@ def render_health_check(
                     fig, title, is_pct=is_pct, theme_bg=theme_bg, interactive=False
                 )
                 fig.update_layout(height=280, margin=dict(t=40, b=20, l=5, r=5))
-                st.plotly_chart(
-                    fig, use_container_width=True, config=DOWNLOAD_CONFIG
-                )
+                st.plotly_chart(fig, use_container_width=True, config=DOWNLOAD_CONFIG)
 
             col_a, col_b = st.columns(2)
             with col_a:

@@ -52,13 +52,9 @@ def render_risk_matrix(
     fig.add_shape(
         x0=x_th, x1=x_max, y0=y_th, y1=y_max, fillcolor="#EF4444", **quadrant_kw
     )
-    fig.add_shape(
-        x0=x_th, x1=x_max, y0=0, y1=y_th, fillcolor="#F59E0B", **quadrant_kw
-    )
+    fig.add_shape(x0=x_th, x1=x_max, y0=0, y1=y_th, fillcolor="#F59E0B", **quadrant_kw)
     fig.add_shape(x0=0, x1=x_th, y0=0, y1=y_th, fillcolor="#3B82F6", **quadrant_kw)
-    fig.add_shape(
-        x0=0, x1=x_th, y0=y_th, y1=y_max, fillcolor="#94A3B8", **quadrant_kw
-    )
+    fig.add_shape(x0=0, x1=x_th, y0=y_th, y1=y_max, fillcolor="#94A3B8", **quadrant_kw)
 
     apply_chart_style(fig, theme_bg=theme_bg)
     fig.update_xaxes(tickformat=".0%")
