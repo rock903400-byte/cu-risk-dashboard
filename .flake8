@@ -1,0 +1,24 @@
+[flake8]
+max-line-length = 88
+extend-ignore =
+    E203,  # whitespace before : (black 相容)
+    W503,  # line break before binary op (black 相容)
+    E501,  # line too long (black 已處理)
+    E402,  # module level import not at top (Streamlit sys.path hack)
+    F401,  # imported but unused (re-export 與測試 fixture 常見)
+    F811,  # redefinition of unused name (test fixtures)
+    F841,  # local variable assigned but never used
+    F402,  # import module shadowed by loop variable
+    F541,  # f-string without any interpolation
+    E722,  # bare except
+    E731,  # do not assign a lambda
+exclude =
+    .git,
+    .pytest_cache,
+    .streamlit,
+    docs,
+    tests/fixtures,
+    tools/data_fetcher,
+    build,
+    dist,
+    .venv
