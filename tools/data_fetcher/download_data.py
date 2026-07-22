@@ -3,6 +3,7 @@ import urllib.parse
 import urllib.error
 import http.cookiejar
 import re
+import os
 import tkinter as tk
 from tkinter import simpledialog
 
@@ -40,7 +41,7 @@ credentials = get_credentials()
 if not credentials:
     exit()
 ACCOUNT, PASSWORD, YM_RANGE = credentials
-LOGIN_URL = "http://localhost/ap/audit_cu/PR019.aspx"
+LOGIN_URL = os.environ.get("AUDIT_SYSTEM_URL", "http://localhost/ap/audit_cu/PR019.aspx")
 
 cj = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
@@ -53,7 +54,7 @@ headers = {
 
 def save_debug_html(html, filename):
     """儲存偵錯用的 HTML 檔案"""
-    path = f"C:\\Users\\user\\Desktop\\穿透協會\\{filename}"
+    path = os.path.join(".", filename)
     with open(path, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"已存檔: {filename}")
@@ -340,7 +341,7 @@ try:
         if not text_content:
             text_content = raw_data.decode("utf-8", errors="ignore")
 
-        file_path = "C:\\Users\\user\\Desktop\\穿透協會\\exported_data.csv"
+        file_path = os.path.join(".", "exported_data.csv")
         with open(file_path, "w", encoding="utf-8-sig", newline="") as f:
             f.write(text_content)
         print(f"轉檔完成！檔案已存至 exported_data.csv ({len(raw_data)} bytes)")
