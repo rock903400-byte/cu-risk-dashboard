@@ -6,16 +6,19 @@
 ## 指令
 
 ```bash
-streamlit run app.py                       # 開發
-pytest tests/ -v                           # 全部 106 個
-python tests/sim_100_journeys.py           # 70 旅程 AppTest 模擬
-python tests/sim_1000_users.py             # 1000 情境服務層 + AppTest 模擬
-python tests/probe_cloud.py                # 線上 HTTP 探測
+streamlit run app.py              # 開發
+pytest tests/ -v                  # 全部 114 個
+pytest tests/test_xxx.py -v       # 單檔
+pytest tests/test_xxx.py::TestX::test_y -v  # 單一測試
+python tests/sim_100_journeys.py  # 70 旅程 AppTest 模擬
+python tests/sim_1000_users.py    # 1000 情境 + AppTest 模擬
+python tests/sim_10k_users.py     # 10000 人壓力測試
+python tests/probe_cloud.py       # 線上 HTTP 探測（100 probes）
 ```
 
 ```bash
 # Linux / macOS
-make fmt       # black
+make fmt       # black（全 repo）
 make lint      # flake8
 make type      # mypy
 make test      # pytest -v
@@ -23,12 +26,12 @@ make verify    # lint + type + test（一錯就停）
 make all       # fmt + verify
 
 # Windows (pwsh 7)
-pwsh scripts/all.ps1            # fmt → lint → type → test
+pwsh scripts/all.ps1            # fmt → lint → type → test（一錯就停）
 pwsh scripts/all.ps1 -SkipFmt   # 跳過 fmt
 pwsh scripts/all.ps1 -SkipType  # 跳過 mypy
 ```
 
-CI 流程在 `.github/workflows/ci.yml`，push/PR main 自動跑 `black --check → flake8 → mypy → pytest --cov`。
+CI（`.github/workflows/ci.yml`）：push/PR main 自動跑 `black --check → flake8 → mypy → pytest --cov`。注意 CI 的 `black --check` 只掃指定目錄（`app.py config.py common/ components/ data/ services/ views/ charts/`），而 `make fmt` 格式化全 repo。
 
 mypy 只掃 `app.py config.py common/ components/ data/ services/ views/ charts/`，跳過 `tests/`。`pyproject.toml` 已寬鬆：`ignore_missing_imports=true`、關閉 `var-annotated` / `call-overload` / `attr-defined`，其餘 `arg-type` 仍要修。
 
@@ -108,7 +111,7 @@ app.py
 - 防 DoS / 損壞連結
 
 **Streamlit 1.56 行為**
-- `use_container_width=True` 有 deprecation warning（不影響功能，2025-12-31 移除）
+- `use_container_width=True` 在 Streamlit 1.42+ 已有 deprecation warning（功能不受影響，但 CI 輸出會多一行）
 - `axis=1` 在 pandas 3 仍可用但 deprecation warning
 
 **Streamlit Cloud secrets TOML 區塊順序**
@@ -121,7 +124,7 @@ app.py
 
 | 檔案 | 性質 |
 |------|------|
-| `test_*.py`（9 個） | pytest 106 cases（含 `conftest.py` autouse fixture） |
+| `test_*.py`（13 個） | pytest 114 cases（含 `conftest.py` autouse fixture） |
 | `sim_100_journeys.py` | 70 旅程 AppTest 模擬，產 `sim_100_REPORT.md` |
 | `sim_1000_users.py` | 1000 情境 + AppTest，產 `sim_1000_results.json` |
 | `sim_10k_users.py` | 10000 人壓力測試，產 `sim_10k_results.json` |
