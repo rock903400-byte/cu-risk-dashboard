@@ -5,7 +5,7 @@
 
 > 風險健檢儀表板 — 整合財報數據的風險管理與財務分析平台，大字體高齡友善設計
 
-**線上 Demo**: https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app
+**線上 Demo**: https://cu-analysis-v1-vizgphhwjwmfkvrrktdjte.streamlit.app（免費版，首次開啟需喚醒約 30 秒）
 
 ## 功能特色
 
